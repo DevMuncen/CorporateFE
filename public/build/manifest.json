@@ -1,0 +1,23 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-rBbWRpxd.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-zT23Mw3l.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/ro-wizard.js": {
+    "file": "assets/ro-wizard-Uv9aKQPN.js",
+    "name": "ro-wizard",
+    "src": "resources/js/ro-wizard.js",
+    "isEntry": true
+  }
+}
