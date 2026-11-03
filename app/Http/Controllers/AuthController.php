@@ -34,6 +34,12 @@ class AuthController extends Controller
             if ($response->successful()) {
                 $payload = $response->json('data') ?? $response->json();
                 $user = $payload['user'] ?? [];
+
+                $role = $user['role'] ?? '';
+                if (! in_array($role, ['corporate_admin', 'corporate_user', 'super_admin', 'admin'])) {
+                    return back()->with('error', 'Akses ditolak. Akun Anda bukan akun Corporate.');
+                }
+
                 $token = $payload['access_token'] ?? $payload['token'] ?? null;
                 $corporateId = $user['corporate_id'] ?? $user['tenant_id'] ?? $payload['corporate_id'] ?? 1;
 
@@ -41,6 +47,13 @@ class AuthController extends Controller
                 session([
                     'api_token' => $token,
                     'tenant_corporate_id' => $corporateId,
+                    'user_id' => $user['id'] ?? null,
+                    'user_name' => $user['name'] ?? 'User',
+                    'user_email' => $user['email'] ?? '',
+                    'user_role' => $user['role'] ?? 'corporate_user',
+                    'corporate_id' => $corporateId,
+                    'corporate_name' => $user['corporate_name'] ?? null,
+                    'corporate_code' => $user['corporate_code'] ?? null,
                     'user_data' => $user,
                 ]);
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CorporateCustomerController;
 use App\Http\Controllers\CorporateDistributorController;
 use App\Http\Controllers\CorporateProductController;
+use App\Http\Controllers\CorporateUserController;
 use App\Http\Controllers\CorporateVendorController;
 use App\Http\Controllers\CorporateWarehouseController;
 use App\Http\Controllers\DashboardController;
@@ -62,10 +63,20 @@ Route::middleware(['bff.auth'])->group(function () {
     Route::get('/finance/corporate-invoices', [DistributorInvoiceController::class, 'corporateInvoices'])->name('finance.corporate-invoices');
     Route::get('/finance/bank-accounts', [BankAccountController::class, 'index'])->name('finance.bank-accounts');
 
+    // User Management (Corporate PIC Admin & Team)
+    Route::get('/users', [CorporateUserController::class, 'index'])->name('users.index');
+
     // Internal API Proxies (BFF)
     Route::prefix('api/internal/corporate')->group(function () {
         // Dashboard Stats
         Route::get('/dashboard/summary', [DashboardController::class, 'proxyStats']);
+
+        // User Management
+        Route::get('/users', [CorporateUserController::class, 'proxyList']);
+        Route::post('/users', [CorporateUserController::class, 'proxyStore']);
+        Route::get('/users/{id}', [CorporateUserController::class, 'proxyShow']);
+        Route::put('/users/{id}', [CorporateUserController::class, 'proxyUpdate']);
+        Route::delete('/users/{id}', [CorporateUserController::class, 'proxyDestroy']);
 
         // Products & Taxonomy
         Route::get('/products', [CorporateProductController::class, 'proxyList']);
@@ -185,6 +196,13 @@ Route::middleware(['bff.auth'])->group(function () {
     Route::prefix('api')->group(function () {
         // Dashboard Stats
         Route::get('/dashboard/summary', [DashboardController::class, 'proxyStats']);
+
+        // User Management
+        Route::get('/users', [CorporateUserController::class, 'proxyList']);
+        Route::post('/users', [CorporateUserController::class, 'proxyStore']);
+        Route::get('/users/{id}', [CorporateUserController::class, 'proxyShow']);
+        Route::put('/users/{id}', [CorporateUserController::class, 'proxyUpdate']);
+        Route::delete('/users/{id}', [CorporateUserController::class, 'proxyDestroy']);
 
         // Products & Categories
         Route::get('/products', [CorporateProductController::class, 'proxyList']);

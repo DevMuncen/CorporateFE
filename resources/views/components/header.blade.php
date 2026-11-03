@@ -59,9 +59,14 @@
           <div class="py-2 px-3 border-b border-slate-100 dark:border-slate-700">
             <p class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ session('user_name', 'Corporate Merchant') }}</p>
             <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ session('user_email', 'korporasi@muncen.com') }}</p>
-            <span class="inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
-              Corporate Tenant #{{ session('corporate_id', '1') }}
-            </span>
+            <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold {{ session('user_role') === 'corporate_admin' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' }}">
+                {{ session('user_role') === 'corporate_admin' ? 'PIC Admin' : 'Staff' }}
+              </span>
+              <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                {{ session('corporate_name') ?: 'Tenant #' . session('corporate_id', '1') }}
+              </span>
+            </div>
           </div>
 
           <div class="py-1">

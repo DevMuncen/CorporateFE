@@ -226,6 +226,26 @@
         </ul>
       </div>
 
+      <!-- Section 6: Governance & Users -->
+      <?php if(session('user_role') === 'corporate_admin' || !session()->has('user_role')): ?>
+      <div>
+        <div class="caption text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 px-3">
+          <span><?php echo e(__('Pengaturan & Tim')); ?></span>
+        </div>
+        <li class="sidebar-item">
+          <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all <?php echo e(request()->is('users*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md shadow-blue-900/25' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400'); ?>" href="/users">
+            <div class="flex items-center gap-3">
+              <iconify-icon icon="solar:user-id-bold-duotone" class="shrink-0 text-xl <?php echo e(request()->is('users*') ? 'text-white' : 'text-blue-600 dark:text-blue-400'); ?>"></iconify-icon>
+              <span class="hide-menu shrink-0 <?php echo e(request()->is('users*') ? '!text-white font-bold' : ''); ?>"><?php echo e(__('Manajemen Pengguna')); ?></span>
+            </div>
+            <?php if(request()->is('users*')): ?>
+              <span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>
+            <?php endif; ?>
+          </a>
+        </li>
+      </div>
+      <?php endif; ?>
+
     </ul>
   </nav>
 </div>
