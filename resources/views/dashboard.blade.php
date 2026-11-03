@@ -1,4 +1,4 @@
-﻿<x-layout.app title="Dashboard | Corporate Merchant Portal">
+<x-layout.app title="Dashboard | Corporate Merchant Portal">
     <div class="space-y-6">
 
         <!-- 1. Top Greeting Card -->
@@ -53,7 +53,7 @@
                 </div>
                 <div class="mt-3">
                     <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Produk</p>
-                    <h4 id="stat-products" class="text-xl font-black text-slate-900 dark:text-white mt-0.5" style="color: #0f172a !important;">...</h4>
+                    <h4 id="stat-products" class="text-xl font-black text-slate-900 dark:text-white mt-0.5">...</h4>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">SKU Terdaftar</p>
                 </div>
             </div>
@@ -70,7 +70,7 @@
                 </div>
                 <div class="mt-3">
                     <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Gudang Aktif</p>
-                    <h4 id="stat-warehouses" class="text-xl font-black text-slate-900 dark:text-white mt-0.5" style="color: #0f172a !important;">...</h4>
+                    <h4 id="stat-warehouses" class="text-xl font-black text-slate-900 dark:text-white mt-0.5">...</h4>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Origin & Depo</p>
                 </div>
             </div>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="mt-3">
                     <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Request Order</p>
-                    <h4 id="stat-ros" class="text-xl font-black text-slate-900 dark:text-white mt-0.5" style="color: #0f172a !important;">...</h4>
+                    <h4 id="stat-ros" class="text-xl font-black text-slate-900 dark:text-white mt-0.5">...</h4>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Menunggu Dispatch</p>
                 </div>
             </div>
@@ -104,7 +104,7 @@
                 </div>
                 <div class="mt-3">
                     <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Surat Jalan</p>
-                    <h4 id="stat-waybills" class="text-xl font-black text-slate-900 dark:text-white mt-0.5" style="color: #0f172a !important;">...</h4>
+                    <h4 id="stat-waybills" class="text-xl font-black text-slate-900 dark:text-white mt-0.5">...</h4>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Waybill Dispatched</p>
                 </div>
             </div>
@@ -121,7 +121,7 @@
                 </div>
                 <div class="mt-3">
                     <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stok Gudang</p>
-                    <h4 id="stat-stocks" class="text-xl font-black text-slate-900 dark:text-white mt-0.5" style="color: #0f172a !important;">...</h4>
+                    <h4 id="stat-stocks" class="text-xl font-black text-slate-900 dark:text-white mt-0.5">...</h4>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Total Koli / Unit</p>
                 </div>
             </div>
@@ -138,7 +138,7 @@
                 </div>
                 <div class="mt-3">
                     <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Faktur B2B</p>
-                    <h4 id="stat-invoices" class="text-xl font-black text-slate-900 dark:text-white mt-0.5" style="color: #0f172a !important;">...</h4>
+                    <h4 id="stat-invoices" class="text-xl font-black text-slate-900 dark:text-white mt-0.5">...</h4>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Invoice Terbit</p>
                 </div>
             </div>
@@ -150,7 +150,7 @@
             <div class="lg:col-span-2 card bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xs p-6">
                 <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700/60">
                     <div>
-                        <h3 class="text-base font-black text-slate-900 dark:text-white" style="color: #0f172a !important;">
+                        <h3 class="text-base font-black text-slate-900 dark:text-white">
                             Request Order (RO) Terbaru
                         </h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -167,7 +167,8 @@
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold bg-slate-50/75 dark:bg-slate-800/80">
-                                <th class="py-3 px-3 rounded-l-lg">No. RO</th>
+                                <th class="py-3 px-3 rounded-l-lg w-12">No</th>
+                                <th class="py-3 px-2">No. RO</th>
                                 <th class="py-3 px-2">Gudang Asal</th>
                                 <th class="py-3 px-2">Tujuan / Drop</th>
                                 <th class="py-3 px-2 text-right">Muatan</th>
@@ -177,7 +178,7 @@
                         </thead>
                         <tbody id="dash-recent-ros-body" class="divide-y divide-slate-100 dark:divide-slate-700/50">
                             <tr>
-                                <td colspan="6" class="py-8 text-center text-slate-400">
+                                <td colspan="7" class="py-8 text-center text-slate-400">
                                     <div class="inline-flex items-center gap-2">
                                         <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                         <span>Memuat daftar request order...</span>
@@ -194,7 +195,7 @@
                 <!-- Warehouse Inventory Health Card -->
                 <div class="card bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xs p-6">
                     <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100 dark:border-slate-700/60">
-                        <h3 class="text-base font-black text-slate-900 dark:text-white" style="color: #0f172a !important;">
+                        <h3 class="text-base font-black text-slate-900 dark:text-white">
                             Hub Gudang Utama
                         </h3>
                         <a href="/warehouses" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Kelola</a>
@@ -206,32 +207,13 @@
                                     <iconify-icon icon="solar:buildings-bold-duotone"></iconify-icon>
                                 </div>
                                 <div>
-                                    <h5 class="text-xs font-bold text-slate-900 dark:text-slate-100" style="color: #0f172a !important;">Gudang Pusat Cikarang</h5>
+                                    <h5 class="text-xs font-bold text-slate-900 dark:text-slate-100">Gudang Pusat Cikarang</h5>
                                     <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Bekasi, Jawa Barat</p>
                                 </div>
                             </div>
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">Aktif</span>
                         </div>
                     </div>
-                </div>
-
-                <!-- Logistics Integration Status -->
-                <div class="bg-gradient-to-br from-slate-900 to-blue-950 rounded-3xl p-6 text-white border border-blue-800/40 shadow-lg">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-blue-300 text-xl backdrop-blur-md">
-                            <iconify-icon icon="solar:shield-check-bold-duotone"></iconify-icon>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-white">Integrasi Logistik Muncen</h4>
-                            <p class="text-[11px] text-slate-300">Backend Port 8001 Aktif</p>
-                        </div>
-                    </div>
-                    <p class="text-xs text-slate-300 leading-relaxed mb-4">
-                        Request Order Anda akan secara instan disinkronkan ke sistem kurir logistik dan platform aggregator secara real-time.
-                    </p>
-                    <a href="/request-orders/create" class="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-center text-white bg-blue-600 hover:bg-blue-500 transition-all block shadow-md shadow-blue-600/30">
-                        Buat Pengiriman Baru
-                    </a>
                 </div>
             </div>
         </div>
@@ -241,114 +223,100 @@
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Helper to safe update stat elements
             const setStat = (id, val) => {
                 const el = document.getElementById(id);
                 if (el) el.innerText = val;
             };
 
-            // 1. Fetch Dashboard Summary (with fallback paths)
+            // 1. Fetch Dashboard Summary
             try {
-                let res;
-                try {
-                    res = await axios.get('/api/internal/corporate/dashboard/summary');
-                } catch (e1) {
-                    try {
-                        res = await axios.get('/api/internal/dashboard/summary');
-                    } catch (e2) {
-                        res = await axios.get('/api/dashboard/summary');
-                    }
-                }
-
+                const res = await axios.get('/api/dashboard/summary');
                 if (res && res.data) {
                     const raw = res.data.data || res.data;
                     const s = raw.summary || raw;
-                    setStat('stat-products', s.total_products ?? s.jumlah_produk ?? '12');
-                    setStat('stat-warehouses', s.total_warehouses ?? s.jumlah_gudang ?? '3');
-                    setStat('stat-ros', s.total_request_orders ?? s.request_order ?? '5');
-                    setStat('stat-waybills', s.total_waybills ?? s.surat_jalan ?? '8');
-                    setStat('stat-stocks', (s.total_stock_units ?? s.stok_tersedia ?? 1450).toLocaleString('id-ID'));
-                    setStat('stat-invoices', s.total_invoices ?? s.jumlah_distributor ?? '4');
-                } else {
-                    throw new Error('No data received');
+                    setStat('stat-products', s.total_products ?? s.jumlah_produk ?? 0);
+                    setStat('stat-warehouses', s.total_warehouses ?? s.jumlah_gudang ?? 0);
+                    setStat('stat-ros', s.total_request_orders ?? s.request_order ?? 0);
+                    setStat('stat-waybills', s.total_waybills ?? s.surat_jalan ?? 0);
+                    setStat('stat-stocks', (s.total_stock_units ?? s.stok_tersedia ?? 0).toLocaleString('id-ID'));
+                    setStat('stat-invoices', s.total_invoices ?? s.jumlah_distributor ?? 0);
                 }
             } catch (err) {
-                console.warn('Dashboard summary using default values:', err);
-                setStat('stat-products', '12');
-                setStat('stat-warehouses', '3');
-                setStat('stat-ros', '5');
-                setStat('stat-waybills', '8');
-                setStat('stat-stocks', '1.450');
-                setStat('stat-invoices', '4');
+                console.warn('Dashboard summary fetch error:', err);
+                setStat('stat-products', '0');
+                setStat('stat-warehouses', '0');
+                setStat('stat-ros', '0');
+                setStat('stat-waybills', '0');
+                setStat('stat-stocks', '0');
+                setStat('stat-invoices', '0');
             }
 
-            // 2. Fetch Recent Request Orders
+            // 2. Fetch Active Warehouses for Widget
             try {
-                let res;
-                try {
-                    res = await axios.get('/api/internal/corporate/request-orders?per_page=5');
-                } catch (e1) {
-                    try {
-                        res = await axios.get('/api/internal/request-orders?per_page=5');
-                    } catch (e2) {
-                        res = await axios.get('/api/request-orders?per_page=5');
+                const whRes = await axios.get('/api/warehouses');
+                const whList = whRes.data?.data || [];
+                const whContainer = document.getElementById('dash-warehouses-list');
+                if (whContainer) {
+                    if (!whList.length) {
+                        whContainer.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">Belum ada gudang terdaftar.</p>';
+                    } else {
+                        whContainer.innerHTML = whList.slice(0, 4).map(wh => `
+                            <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-lg shrink-0">
+                                        <iconify-icon icon="solar:buildings-bold-duotone"></iconify-icon>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-xs font-bold text-slate-900 dark:text-slate-100">${wh.name}</h5>
+                                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${wh.city || '-'}, ${wh.address || ''}</p>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">Aktif</span>
+                            </div>
+                        `).join('');
                     }
                 }
+            } catch (whErr) {
+                console.warn('Fetch warehouses widget error:', whErr);
+            }
 
+            // 3. Fetch Recent Request Orders
+            const tbody = document.getElementById('dash-recent-ros-body');
+            try {
+                const res = await axios.get('/api/request-orders?per_page=5');
                 const items = res?.data?.data?.data || res?.data?.data || [];
-                const tbody = document.getElementById('dash-recent-ros-body');
                 
                 if (!items.length) {
-                    // Populate default sample rows if no ROs exist yet
                     tbody.innerHTML = `
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td class="py-3 px-3 font-bold text-blue-600 dark:text-blue-400 font-mono">RO-202610-001</td>
-                            <td class="py-3 px-2 text-slate-800 dark:text-slate-200 font-semibold" style="color: #0f172a !important;">Gudang Pusat Cikarang</td>
-                            <td class="py-3 px-2 text-slate-600 dark:text-slate-400">Distributor Surabaya Barat</td>
-                            <td class="py-3 px-2 text-right font-semibold text-slate-800 dark:text-slate-200">1.200 kg</td>
-                            <td class="py-3 px-2 text-center">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
-                                    Submitted
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-right">
-                                <a href="/request-orders" class="text-blue-600 dark:text-blue-400 font-bold hover:underline">Detail &rarr;</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td class="py-3 px-3 font-bold text-blue-600 dark:text-blue-400 font-mono">RO-202610-002</td>
-                            <td class="py-3 px-2 text-slate-800 dark:text-slate-200 font-semibold" style="color: #0f172a !important;">Depo Logistik Cakung</td>
-                            <td class="py-3 px-2 text-slate-600 dark:text-slate-400">Mitra Bandung Timur</td>
-                            <td class="py-3 px-2 text-right font-semibold text-slate-800 dark:text-slate-200">850 kg</td>
-                            <td class="py-3 px-2 text-center">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300">
-                                    Dispatched
-                                </span>
-                            </td>
-                            <td class="py-3 px-3 text-right">
-                                <a href="/request-orders" class="text-blue-600 dark:text-blue-400 font-bold hover:underline">Detail &rarr;</a>
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-slate-400">
+                                Belum ada Request Order (RO) yang diterbitkan.
                             </td>
                         </tr>
                     `;
                     return;
                 }
 
-                tbody.innerHTML = items.map(ro => {
+                tbody.innerHTML = items.map((ro, idx) => {
                     const statusClass = {
                         'draft': 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
                         'submitted': 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
                         'approved': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300',
+                        'confirmed': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300',
                         'dispatched': 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
+                        'in_transit': 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
                         'delivered': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
+                        'completed': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
                         'cancelled': 'bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300'
                     }[ro.status?.toLowerCase()] || 'bg-slate-100 text-slate-700';
 
                     return `
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td class="py-3 px-3 font-bold text-blue-600 dark:text-blue-400 font-mono">${ro.ro_number || 'RO-#' + ro.id}</td>
-                            <td class="py-3 px-2 text-slate-800 dark:text-slate-200 font-semibold" style="color: #0f172a !important;">${ro.origin_warehouse?.name || 'Gudang Pusat Cikarang'}</td>
-                            <td class="py-3 px-2 text-slate-600 dark:text-slate-400">${ro.destination_city || ro.recipient_name || 'Multi-Drop Area'}</td>
-                            <td class="py-3 px-2 text-right font-semibold text-slate-800 dark:text-slate-200">${ro.total_weight || 0} kg</td>
+                            <td class="py-3 px-3 font-bold text-slate-500">${idx + 1}</td>
+                            <td class="py-3 px-2 font-bold text-blue-600 dark:text-blue-400 font-mono">${ro.order_number || ro.ro_number || 'RO-#' + ro.id}</td>
+                            <td class="py-3 px-2 text-slate-800 dark:text-slate-200 font-semibold">${ro.origin_warehouse?.name || 'Gudang Pusat'}</td>
+                            <td class="py-3 px-2 text-slate-600 dark:text-slate-400">${ro.destination_city || ro.recipient_name || 'Kota Tujuan'}</td>
+                            <td class="py-3 px-2 text-right font-semibold text-slate-800 dark:text-slate-200">${ro.total_weight_kg || ro.total_weight || 0} kg</td>
                             <td class="py-3 px-2 text-center">
                                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClass}">
                                     ${ro.status || 'Draft'}
@@ -361,21 +329,11 @@
                     `;
                 }).join('');
             } catch (err) {
-                console.warn('Recent ROs fetch fallback:', err);
-                const tbody = document.getElementById('dash-recent-ros-body');
+                console.warn('Recent ROs fetch error:', err);
                 tbody.innerHTML = `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                        <td class="py-3 px-3 font-bold text-blue-600 dark:text-blue-400 font-mono">RO-202610-001</td>
-                        <td class="py-3 px-2 text-slate-800 dark:text-slate-200 font-semibold" style="color: #0f172a !important;">Gudang Pusat Cikarang</td>
-                        <td class="py-3 px-2 text-slate-600 dark:text-slate-400">Distributor Surabaya Barat</td>
-                        <td class="py-3 px-2 text-right font-semibold text-slate-800 dark:text-slate-200">1.200 kg</td>
-                        <td class="py-3 px-2 text-center">
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
-                                Submitted
-                            </span>
-                        </td>
-                        <td class="py-3 px-3 text-right">
-                            <a href="/request-orders" class="text-blue-600 dark:text-blue-400 font-bold hover:underline">Detail &rarr;</a>
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400">
+                            Gagal memuat Request Order terbaru.
                         </td>
                     </tr>
                 `;

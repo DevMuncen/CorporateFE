@@ -30,7 +30,7 @@
                         <iconify-icon icon="solar:magnifer-linear" class="text-base"></iconify-icon>
                     </span>
                     <input type="text" id="stockSearch" oninput="debounceFetchStocks()" placeholder="Cari nama barang atau kode SKU..."
-                        class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                        class="w-full !pl-10 !ps-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
                 <div>
                     <select id="warehouseFilter" onchange="fetchStocks()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
@@ -46,7 +46,8 @@
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">
-                            <th class="py-3.5 pl-6">Kode SKU</th>
+                            <th class="py-3.5 pl-6 w-12">No</th>
+                            <th class="py-3.5">Kode SKU</th>
                             <th class="py-3.5">Nama Produk</th>
                             <th class="py-3.5">Lokasi Gudang</th>
                             <th class="py-3.5 text-right">Stok Fisik</th>
@@ -57,7 +58,7 @@
                     </thead>
                     <tbody id="stocksTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         <tr>
-                            <td colspan="7" class="py-12 text-center text-slate-400">
+                            <td colspan="8" class="py-12 text-center text-slate-400">
                                 <div class="inline-flex items-center gap-2">
                                     <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                     <span>Memuat data saldo stok...</span>
@@ -91,17 +92,18 @@
                 const data = res.data?.data?.data || res.data?.data || [];
 
                 if (!data.length) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400">Tidak ada data stok ditemukan.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-400">Tidak ada data stok ditemukan.</td></tr>`;
                     return;
                 }
 
-                tbody.innerHTML = data.map(s => {
+                tbody.innerHTML = data.map((s, idx) => {
                     const available = (s.quantity || 0) - (s.allocated_quantity || 0);
                     const isLow = available <= (s.minimum_stock || 10);
 
                     return `
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td class="py-3.5 pl-6 font-mono font-bold text-blue-600 dark:text-blue-400">${s.product?.sku || s.sku || '-'}</td>
+                            <td class="py-3.5 pl-6 font-bold text-slate-500">${idx + 1}</td>
+                            <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">${s.product?.sku || s.sku || '-'}</td>
                             <td class="py-3.5 font-bold text-slate-800 dark:text-slate-100">${s.product?.name || s.product_name || 'Produk'}</td>
                             <td class="py-3.5 text-slate-600 dark:text-slate-300">${s.warehouse?.name || 'Gudang Pusat'}</td>
                             <td class="py-3.5 text-right font-semibold text-slate-800 dark:text-slate-200">${(s.quantity || 0).toLocaleString('id-ID')} unit</td>
@@ -117,11 +119,30 @@
                 }).join('');
             } catch (err) {
                 console.error('Fetch stocks error:', err);
-                tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400">Gagal memuat saldo stok.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-400">Gagal memuat saldo stok.</td></tr>`;
             }
         }
 
-        document.addEventListener('DOMContentLoaded', fetchStocks);
+        async function fetchWarehousesFilter() {
+            try {
+                const res = await axios.get('/api/warehouses');
+                const list = res.data?.data?.data || res.data?.data || [];
+                const sel = document.getElementById('warehouseFilter');
+                list.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w.id;
+                    opt.textContent = w.name + (w.city ? ` (${w.city})` : '');
+                    sel.appendChild(opt);
+                });
+            } catch (e) {
+                console.error('Fetch warehouses error:', e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWarehousesFilter();
+            fetchStocks();
+        });
     </script>
     @endpush
 </x-layout.app>

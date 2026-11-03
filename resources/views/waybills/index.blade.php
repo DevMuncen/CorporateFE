@@ -20,7 +20,7 @@
                         <iconify-icon icon="solar:magnifer-linear" class="text-base"></iconify-icon>
                     </span>
                     <input type="text" id="wbSearch" oninput="debounceFetchWaybills()" placeholder="Cari No. Waybill, No. Polisi, Driver..."
-                        class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                        class="w-full !pl-10 !ps-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
                 <div>
                     <select id="wbStatusFilter" onchange="fetchWaybills()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
@@ -47,7 +47,8 @@
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">
-                            <th class="py-3.5 pl-6">No. Waybill</th>
+                            <th class="py-3.5 pl-6 w-12">No</th>
+                            <th class="py-3.5">No. Waybill</th>
                             <th class="py-3.5">Ref. Request Order</th>
                             <th class="py-3.5">Transporter &amp; Armada</th>
                             <th class="py-3.5">Rute Pengiriman</th>
@@ -57,7 +58,7 @@
                     </thead>
                     <tbody id="waybillsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-400">
+                            <td colspan="7" class="py-12 text-center text-slate-400">
                                 <div class="inline-flex items-center gap-2">
                                     <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                     <span>Memuat surat jalan...</span>
@@ -91,38 +92,60 @@
                 const data = res.data?.data?.data || res.data?.data || [];
 
                 if (!data.length) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-400">Belum ada surat jalan / waybill yang diterbitkan.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400">Belum ada surat jalan / waybill yang diterbitkan.</td></tr>`;
                     return;
                 }
 
-                tbody.innerHTML = data.map(wb => {
+                tbody.innerHTML = data.map((wb, idx) => {
+                    const statusKey = (wb.status || 'draft').toLowerCase();
                     const statusClass = {
+                        'draft': 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+                        'confirmed': 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
                         'allocated': 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
                         'dispatched': 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300',
-                        'in_transit': 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300',
+                        'transit': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300',
+                        'in_transit': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300',
                         'arrived': 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300',
-                        'delivered': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
-                    }[wb.status?.toLowerCase()] || 'bg-slate-100 text-slate-700';
+                        'delivered': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300',
+                        'finalized': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300'
+                    }[statusKey] || 'bg-slate-100 text-slate-700';
+
+                    const roId = wb.request_order_id || wb.request_order?.id;
+                    const roNumber = wb.request_order?.order_number || wb.request_order?.ro_number || (roId ? 'RO-#' + roId : null);
+                    const carrierName = wb.request_order?.logistic?.name || wb.vendor?.name || 'Muncen Logistics Carrier';
+                    const origin = wb.origin_city_name || wb.origin_warehouse?.name || wb.origin_city || 'Origin';
+                    const destination = wb.destination_city_name || wb.destination_address || wb.destination_city || 'Tujuan';
 
                     return `
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td class="py-3.5 pl-6 font-mono font-bold text-blue-600 dark:text-blue-400">${wb.waybill_number || 'WB-#' + wb.id}</td>
-                            <td class="py-3.5 font-mono text-slate-600 dark:text-slate-400">${wb.request_order?.ro_number || '-'}</td>
-                            <td class="py-3.5 text-slate-700 dark:text-slate-300">
-                                <div class="font-bold">${wb.vendor?.name || 'Muncen Carrier'}</div>
-                                <div class="text-[10px] text-slate-400">${wb.plate_number || 'B 9999 MCN'} • ${wb.driver_name || 'Driver'}</div>
+                            <td class="py-3.5 pl-6 font-bold text-slate-500">${idx + 1}</td>
+                            <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">
+                                <a href="/waybills/${wb.id}" class="hover:underline">${wb.waybill_number || 'WB-#' + wb.id}</a>
+                                <div class="text-[10px] text-slate-400 font-sans font-normal">${wb.created_at ? new Date(wb.created_at).toLocaleDateString('id-ID') : 'Hari ini'}</div>
                             </td>
-                            <td class="py-3.5 text-slate-600 dark:text-slate-300">
-                                ${wb.origin_city || 'Origin'} &rarr; <span class="font-bold text-slate-800 dark:text-slate-100">${wb.destination_city || 'Tujuan'}</span>
+                            <td class="py-3.5 font-mono">
+                                ${roNumber && roId ? `
+                                    <a href="/request-orders/${roId}" class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 hover:underline">
+                                        <iconify-icon icon="solar:document-bold" class="text-xs"></iconify-icon>
+                                        <span>${roNumber}</span>
+                                    </a>
+                                ` : '<span class="text-slate-400 text-xs">-</span>'}
+                            </td>
+                            <td class="py-3.5 text-slate-700 dark:text-slate-300">
+                                <div class="font-bold text-xs">${carrierName}</div>
+                                <div class="text-[10px] text-slate-400">${wb.plate_number || wb.request_order?.fleet_type?.name || 'Armada Dedicated'}</div>
+                            </td>
+                            <td class="py-3.5 text-slate-600 dark:text-slate-300 text-xs">
+                                <span>${origin}</span> &rarr; <span class="font-bold text-slate-800 dark:text-slate-100">${destination}</span>
                             </td>
                             <td class="py-3.5 text-center">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClass}">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClass}">
                                     ${wb.status || 'Draft'}
                                 </span>
                             </td>
                             <td class="py-3.5 pr-6 text-right">
                                 <div class="inline-flex items-center gap-1.5">
-                                    <a href="/waybills/${wb.id}" class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-100 transition-all">
+                                    <a href="/waybills/${wb.id}" class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-100 transition-all text-xs">
                                         Lacak
                                     </a>
                                     <a href="/waybills/${wb.id}/print" target="_blank" class="p-1 rounded-lg text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-all" title="Cetak Surat Jalan">
@@ -135,7 +158,7 @@
                 }).join('');
             } catch (err) {
                 console.error('Fetch waybills error:', err);
-                tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-400">Gagal memuat waybill.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400">Gagal memuat waybill.</td></tr>`;
             }
         }
 

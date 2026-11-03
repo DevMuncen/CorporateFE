@@ -1,332 +1,713 @@
-// 5-Step Request Order Wizard Logic for CorporateFE
+// 5-Step Request Order Wizard Logic for CorporateFE (Direct Route & Direct Truck Rate)
 
-document.addEventListener('DOMContentLoaded', function() {
-    const wizardForm = document.getElementById('ro-wizard-form');
-    if (!wizardForm) return;
+let currentStep = 1;
+const totalSteps = 5;
 
-    let currentStep = 1;
-    const totalSteps = 5;
+window.availableProducts = [];
+window.availableWarehouses = [];
 
-    // State Object
-    const roState = {
-        order_date: new Date().toISOString().split('T')[0],
-        origin_warehouse_id: '',
-        origin_city_code: '',
-        destination_city_code: '',
-        origin_address: '',
-        sender_name: 'Gudang Utama Korporasi',
-        sender_phone: '081234567890',
-        fleet_type_id: 1,
-        logistic_id: '',
-        notes: '',
-        delivery_points: []
-    };
+const roState = {
+    order_date: new Date().toISOString().split('T')[0],
+    origin_warehouse_id: '',
+    origin_name: '',
+    origin_city_code: '31.71',
+    destination_city_code: '',
+    destination_city_name: '',
+    recipient_name: '',
+    recipient_phone: '',
+    destination_address: '',
+    departure_date: '',
+    shipper_pic: '',
+    shipper_phone: '',
+    shipper_notes: '',
+    fleet_type_id: 1,
+    fleet_name: 'CDE Box (Engkel)',
+    total_qty: 0,
+    total_weight: 0,
+    items: [],
+    pricing: {
+        base_rate: 3500000,
+        shunting: 450000,
+        insurance: 5250,
+        total: 3955250
+    }
+};
 
-    // Step Navigation Handlers
-    window.goToStep = function(step) {
-        if (step < 1 || step > totalSteps) return;
+const fleetSpecs = {
+    1: { name: 'CDE Box (Engkel)', capacity_kg: 2000, capacity_cbm: 7.0, default_base: 3500000 },
+    2: { name: 'CDD Box (Double)', capacity_kg: 4000, capacity_cbm: 14.0, default_base: 4500000 },
+    3: { name: 'Fuso Heavy Box', capacity_kg: 8000, capacity_cbm: 30.0, default_base: 7500000 },
+    4: { name: 'Tronton Wingbox', capacity_kg: 15000, capacity_cbm: 48.0, default_base: 12500000 }
+};
 
-        // Validation before proceeding
-        if (step > currentStep) {
-            if (currentStep === 1 && (!roState.origin_warehouse_id || !roState.destination_city_code || !roState.logistic_id)) {
-                window.showToast('Silakan pilih Gudang Asal, Kota Tujuan, dan Mitra Logistik terlebih dahulu.', 'error');
-                return;
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Set default departure date to now + 2 hours
+    const depInput = document.getElementById('departureDate');
+    if (depInput && !depInput.value) {
+        const now = new Date();
+        now.setHours(now.getHours() + 2);
+        now.setMinutes(0);
+        depInput.value = now.toISOString().slice(0, 16);
+    }
+
+    // 2. Fetch products for SKU catalog
+    await fetchCargoProducts();
+
+    // 3. Bind Warehouse Picker event
+    bindWarehousePicker();
+
+    // 4. Bind Destination City Picker event
+    bindDestinationCityPicker();
+
+    // 5. Bind Product Picker search
+    bindProductPickerSearch();
+
+    // 6. Pre-add 1 demo item row if empty
+    if (window.availableProducts.length > 0) {
+        addProductToCargo(window.availableProducts[0], 10);
+    }
+});
+
+// Bind Origin Warehouse Picker Selection
+function bindWarehousePicker() {
+    const hiddenWh = document.getElementById('hidden-originWarehouse');
+    if (!hiddenWh) return;
+
+    hiddenWh.addEventListener('change', (e) => {
+        let item = e.detail?.item;
+        if (!item && hiddenWh.dataset.item) {
+            try { item = JSON.parse(hiddenWh.dataset.item); } catch (err) {}
+        }
+
+        if (item) {
+            roState.origin_warehouse_id = item.id;
+            roState.origin_name = item.name;
+            roState.origin_city_code = item.city_code || '31.71';
+
+            const picInput = document.getElementById('shipperPic');
+            const phoneInput = document.getElementById('shipperPhone');
+            const notesInput = document.getElementById('shipperNotes');
+
+            if (picInput && item.pic_name) picInput.value = item.pic_name;
+            if (phoneInput && item.phone) phoneInput.value = item.phone;
+            if (notesInput && !notesInput.value && item.address) {
+                notesInput.value = `Muatan dari ${item.name}, ${item.address}`;
             }
-            if (currentStep === 3 && roState.delivery_points.length === 0) {
-                window.showToast('Minimal harus ada 1 titik drop pengiriman (Delivery Point).', 'error');
-                return;
+
+            if (roState.destination_city_code) {
+                calculateDynamicTariff();
             }
         }
+    });
+}
 
-        // Hide all steps
-        for (let i = 1; i <= totalSteps; i++) {
-            const stepEl = document.getElementById(`step-card-${i}`);
-            const tabEl = document.getElementById(`step-tab-${i}`);
-            if (stepEl) stepEl.classList.add('hidden');
-            if (tabEl) {
-                tabEl.classList.remove('bg-corporate-800', 'text-white');
-                tabEl.classList.add('bg-slate-100', 'text-slate-600');
-            }
+// Bind Destination City Picker Selection
+function bindDestinationCityPicker() {
+    const hiddenCity = document.getElementById('hidden-destinationCity');
+    if (!hiddenCity) return;
+
+    hiddenCity.addEventListener('change', (e) => {
+        let item = e.detail?.item;
+        if (!item && hiddenCity.dataset.item) {
+            try { item = JSON.parse(hiddenCity.dataset.item); } catch (err) {}
         }
 
-        // Show active step
-        const activeStepEl = document.getElementById(`step-card-${step}`);
-        const activeTabEl = document.getElementById(`step-tab-${step}`);
-        if (activeStepEl) activeStepEl.classList.remove('hidden');
-        if (activeTabEl) {
-            activeTabEl.classList.remove('bg-slate-100', 'text-slate-600');
-            activeTabEl.classList.add('bg-corporate-800', 'text-white');
-        }
+        if (item) {
+            roState.destination_city_code = item.id;
+            roState.destination_city_name = item.name;
 
-        currentStep = step;
-
-        if (currentStep === 5) {
-            calculateAndRenderTariffSummary();
-        }
-    };
-
-    // Route Inquiry Trigger
-    window.inquireRoutes = async function() {
-        const originWhSelect = document.getElementById('origin_warehouse_id');
-        const destCitySelect = document.getElementById('destination_city_code');
-        const carrierContainer = document.getElementById('carrier-selection-list');
-
-        if (!originWhSelect.value || !destCitySelect.value) return;
-
-        roState.origin_warehouse_id = originWhSelect.value;
-        const selectedWhOption = originWhSelect.options[originWhSelect.selectedIndex];
-        roState.origin_city_code = selectedWhOption.getAttribute('data-city-code') || '31.71';
-        roState.origin_address = selectedWhOption.getAttribute('data-address') || '';
-        roState.destination_city_code = destCitySelect.value;
-
-        carrierContainer.innerHTML = '<div class="py-4 text-center text-slate-500 text-sm">Mencari kontrak tarif logistik aktif...</div>';
-
-        try {
-            const response = await axios.post('/api/internal/corporate/request-orders/inquire-routes', {
-                origin_city_code: roState.origin_city_code,
-                destination_city_code: roState.destination_city_code,
-                fleet_type_id: roState.fleet_type_id
-            });
-
-            const carriers = response.data?.data?.available_carriers || [];
-            if (carriers.length === 0) {
-                carrierContainer.innerHTML = '<div class="p-3 bg-amber-50 text-amber-800 rounded-lg text-sm">Tidak ditemukan mitra logistik dengan kontrak aktif untuk rute ini. Silakan hubungi Aggregator.</div>';
-                return;
+            // Update drop address placeholder or prepopulate if empty
+            const dropAddress = document.querySelector('.drop-address');
+            if (dropAddress && !dropAddress.value) {
+                dropAddress.placeholder = `Alamat lengkap penerima di ${item.name}`;
             }
 
-            let html = '';
-            carriers.forEach((c, idx) => {
-                const checked = idx === 0 ? 'checked' : '';
-                if (idx === 0) roState.logistic_id = c.logistic_id;
-                html += `
-                    <label class="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-slate-50 border-slate-200">
-                        <div class="flex items-center space-x-3">
-                            <input type="radio" name="selected_carrier" value="${c.logistic_id}" ${checked} onchange="window.selectCarrier(${c.logistic_id})" class="text-corporate-800 focus:ring-corporate-700">
-                            <div>
-                                <div class="font-semibold text-slate-800 text-sm">${c.logistic_name}</div>
-                                <div class="text-xs text-slate-500">Estimasi Base: ${window.formatCurrency(c.total_estimated || c.linehaul_price)}</div>
-                            </div>
-                        </div>
-                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded font-medium">Kontrak Aktif</span>
-                    </label>
-                `;
-            });
-            carrierContainer.innerHTML = html;
-        } catch (e) {
-            carrierContainer.innerHTML = '<div class="p-3 bg-rose-50 text-rose-800 rounded-lg text-sm">Gagal memuat rute kontrak. Default ke Logistik Merah Putih.</div>';
-            roState.logistic_id = 1;
+            if (roState.origin_city_code) {
+                calculateDynamicTariff();
+            }
         }
-    };
+    });
+}
 
-    window.selectCarrier = function(logisticId) {
-        roState.logistic_id = logisticId;
-    };
+// Fetch products from API
+async function fetchCargoProducts() {
+    try {
+        const res = await axios.get('/api/products?per_page=100');
+        const raw = res.data?.data;
+        const list = Array.isArray(raw) ? raw : (raw?.data || []);
+        window.availableProducts = list.length > 0 ? list : getDefaultProducts();
+    } catch (err) {
+        console.warn('Fetch products warning, using defaults:', err);
+        window.availableProducts = getDefaultProducts();
+    }
+    renderProductPickerModal(window.availableProducts);
+}
 
-    window.selectFleetType = function(fleetTypeId) {
-        roState.fleet_type_id = fleetTypeId;
-        document.querySelectorAll('.fleet-card').forEach(card => {
-            card.classList.remove('border-corporate-800', 'bg-blue-50/50');
+function getDefaultProducts() {
+    return [
+        { id: 1, name: 'Beras Premium 5kg', sku: 'SKU-BRG-001', weight: 5, base_price: 75000, uom: 'Sak' },
+        { id: 2, name: 'Minyak Goreng 2L', sku: 'SKU-BRG-002', weight: 2, base_price: 36000, uom: 'Pouch' },
+        { id: 3, name: 'Gula Pasir 1kg', sku: 'SKU-BRG-003', weight: 1, base_price: 18000, uom: 'Bungkus' },
+        { id: 4, name: 'Tepung Terigu 25kg', sku: 'SKU-BRG-004', weight: 25, base_price: 245000, uom: 'Karung' },
+        { id: 5, name: 'Mie Instan Dus (40 Pcs)', sku: 'SKU-BRG-005', weight: 4.5, base_price: 120000, uom: 'Karton' }
+    ];
+}
+
+// Render Product Modal Picker List
+function renderProductPickerModal(products) {
+    const tbody = document.getElementById('tbody-product-picker');
+    if (!tbody) return;
+
+    if (!products || products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-4 text-center text-slate-400">Tidak ada produk ditemukan.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = products.map((p, idx) => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
+            <td class="px-4 py-3 whitespace-nowrap text-xs font-bold text-slate-500">${idx + 1}</td>
+            <td class="px-4 py-3 whitespace-nowrap text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700">${p.sku || p.code || 'SKU-' + p.id}</span>
+            </td>
+            <td class="px-4 py-3 text-xs text-slate-800 dark:text-slate-200">
+                <div class="font-bold">${p.name}</div>
+                <div class="text-[11px] text-slate-400">${p.uom || 'Unit'} • Rp ${Number(p.base_price || p.price || 0).toLocaleString('id-ID')}</div>
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-bold text-slate-600 dark:text-slate-300">
+                ${Number(p.weight || p.weight_kg || 1).toLocaleString('id-ID')} kg
+            </td>
+            <td class="px-4 py-3 whitespace-nowrap text-end text-xs">
+                <button type="button" onclick="selectProductFromPicker(${p.id})" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm transition-all">
+                    Pilih
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Bind search input on product modal
+function bindProductPickerSearch() {
+    const searchInput = document.getElementById('search-product-picker');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = window.availableProducts.filter(p => {
+            const name = (p.name || '').toLowerCase();
+            const sku = (p.sku || p.code || '').toLowerCase();
+            return name.includes(query) || sku.includes(query);
         });
-        const activeCard = document.getElementById(`fleet-card-${fleetTypeId}`);
-        if (activeCard) activeCard.classList.add('border-corporate-800', 'bg-blue-50/50');
-    };
+        renderProductPickerModal(filtered);
+    });
+}
 
-    // Multi-Drop Sequencer Logic
-    window.addDeliveryPoint = function() {
-        const seq = roState.delivery_points.length + 1;
-        roState.delivery_points.push({
-            stop_sequence: seq,
-            city_code: roState.destination_city_code,
-            delivery_type: 2, // Distributor WH default
-            distributor_warehouse_id: '',
-            distributor_order_id: null,
-            po_number: '',
-            recipient_name: '',
-            recipient_phone: '',
-            address: '',
-            items: [
-                { product_id: 1, cargo_type_id: 1, quantity: 10, unit_price: 150000, notes: '' }
-            ]
-        });
-        renderDeliveryPoints();
-    };
+// Open Product Picker for new row
+window.openProductPickerForNewRow = function() {
+    const modalEl = document.getElementById('modal-product-picker');
+    if (!modalEl) return;
+    if (modalEl.parentElement !== document.body) {
+        document.body.appendChild(modalEl);
+    }
+    document.querySelectorAll('.hs-overlay-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('overflow-hidden');
+    document.body.style.overflow = '';
+    modalEl.style.display = 'flex';
+    modalEl.classList.remove('hidden');
+    
+    // Ensure product modal list is immediately rendered
+    if (!window.availableProducts || window.availableProducts.length === 0) {
+        window.availableProducts = getDefaultProducts();
+    }
+    renderProductPickerModal(window.availableProducts);
 
-    window.removeDeliveryPoint = function(index) {
-        roState.delivery_points.splice(index, 1);
-        roState.delivery_points.forEach((dp, idx) => dp.stop_sequence = idx + 1);
-        renderDeliveryPoints();
-    };
+    const searchInput = document.getElementById('search-product-picker');
+    if (searchInput) {
+        setTimeout(() => searchInput.focus(), 60);
+    }
+};
 
-    function renderDeliveryPoints() {
-        const container = document.getElementById('delivery-points-container');
-        if (!container) return;
+window.closeProductPickerModal = function() {
+    const modalEl = document.getElementById('modal-product-picker');
+    if (modalEl) {
+        modalEl.style.display = 'none';
+        modalEl.classList.add('hidden');
+    }
+    document.querySelectorAll('.hs-overlay-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('overflow-hidden');
+    document.body.style.overflow = '';
+};
 
-        if (roState.delivery_points.length === 0) {
-            container.innerHTML = '<div class="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl text-slate-500 text-sm">Belum ada titik drop pengiriman. Klik "+ Tambah Titik Drop" untuk memulai.</div>';
+// Handle product selected from modal
+window.selectProductFromPicker = function(productId) {
+    const prod = window.availableProducts.find(p => p.id == productId);
+    if (!prod) return;
+
+    addProductToCargo(prod, 10);
+
+    // Close product picker modal
+    window.closeProductPickerModal();
+};
+
+// Add product to cargo table
+function addProductToCargo(prod, defaultQty = 10) {
+    const tbody = document.getElementById('productRowsBody');
+    if (!tbody) return;
+
+    // Check if already in table, then increment qty
+    const existingRow = tbody.querySelector(`tr[data-product-id="${prod.id}"]`);
+    if (existingRow) {
+        const qtyInput = existingRow.querySelector('.prod-qty');
+        if (qtyInput) {
+            qtyInput.value = parseInt(qtyInput.value || 0) + defaultQty;
+            calculateCargoTotals();
             return;
         }
-
-        let html = '';
-        roState.delivery_points.forEach((dp, idx) => {
-            html += `
-                <div class="p-5 border border-slate-200 rounded-xl bg-white shadow-sm mb-4">
-                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-                        <div class="flex items-center space-x-2">
-                            <span class="w-7 h-7 rounded-full bg-corporate-800 text-white flex items-center justify-center font-bold text-xs">${dp.stop_sequence}</span>
-                            <h4 class="font-bold text-slate-800 text-sm">Drop Point #${dp.stop_sequence}</h4>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button type="button" onclick="window.openDistributorPoPicker(${idx})" class="px-2.5 py-1 text-xs font-medium text-corporate-800 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100">
-                                📥 Import Distributor PO
-                            </button>
-                            <button type="button" onclick="window.removeDeliveryPoint(${idx})" class="text-rose-500 hover:text-rose-700 text-xs font-semibold">
-                                Hapus Stop
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Tipe Tujuan (Delivery Type)</label>
-                            <select class="w-full text-xs rounded-lg border-slate-200 p-2 border" onchange="window.updateDropField(${idx}, 'delivery_type', Number(this.value))">
-                                <option value="1" ${dp.delivery_type === 1 ? 'selected' : ''}>Gudang Korporasi (Wh-to-Wh)</option>
-                                <option value="2" ${dp.delivery_type === 2 ? 'selected' : ''}>Gudang Distributor</option>
-                                <option value="3" ${dp.delivery_type === 3 ? 'selected' : ''}>End Customer B2B</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Nama Penerima</label>
-                            <input type="text" value="${dp.recipient_name}" class="w-full text-xs rounded-lg border-slate-200 p-2 border" placeholder="Contoh: Distributor Bandung" oninput="window.updateDropField(${idx}, 'recipient_name', this.value)">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">No. Telp Penerima</label>
-                            <input type="text" value="${dp.recipient_phone}" class="w-full text-xs rounded-lg border-slate-200 p-2 border" placeholder="0813..." oninput="window.updateDropField(${idx}, 'recipient_phone', this.value)">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Alamat Lengkap Drop</label>
-                        <input type="text" value="${dp.address}" class="w-full text-xs rounded-lg border-slate-200 p-2 border" placeholder="Jl. Raya Industri..." oninput="window.updateDropField(${idx}, 'address', this.value)">
-                    </div>
-
-                    <!-- Encapsulated Items -->
-                    <div class="mt-4 pt-3 border-t border-slate-100">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold text-slate-700">Daftar Produk untuk Stop #${dp.stop_sequence}:</span>
-                            <button type="button" onclick="window.addItemToDrop(${idx})" class="text-xs text-corporate-800 font-semibold hover:underline">+ Tambah SKU Produk</button>
-                        </div>
-                        <div class="space-y-2">
-                            ${dp.items.map((item, itemIdx) => `
-                                <div class="flex items-center space-x-2 text-xs">
-                                    <span class="text-slate-400 w-5 text-right">${itemIdx + 1}.</span>
-                                    <select class="rounded border-slate-200 p-1 text-xs flex-1 border" onchange="window.updateItemField(${idx}, ${itemIdx}, 'product_id', Number(this.value))">
-                                        <option value="1" ${item.product_id === 1 ? 'selected' : ''}>Produk Karton Merah Putih (PRD-CMP-001)</option>
-                                        <option value="2" ${item.product_id === 2 ? 'selected' : ''}>Produk Cold Chain Merah Putih (PRD-CMP-002)</option>
-                                    </select>
-                                    <input type="number" min="1" value="${item.quantity}" class="w-20 rounded border-slate-200 p-1 text-xs border" placeholder="Qty" oninput="window.updateItemField(${idx}, ${itemIdx}, 'quantity', Number(this.value))">
-                                    <input type="number" value="${item.unit_price}" class="w-28 rounded border-slate-200 p-1 text-xs border" placeholder="Harga Satuan" oninput="window.updateItemField(${idx}, ${itemIdx}, 'unit_price', Number(this.value))">
-                                    <button type="button" onclick="window.removeItemFromDrop(${idx}, ${itemIdx})" class="text-rose-500 font-bold px-1 hover:text-rose-700">&times;</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
     }
 
-    window.updateDropField = function(dropIdx, field, val) {
-        roState.delivery_points[dropIdx][field] = val;
-    };
+    const rawWeight = parseFloat(prod.weight !== undefined && prod.weight !== null ? prod.weight : (prod.weight_kg ?? 1));
+    const weight = (rawWeight > 0) ? rawWeight : 5;
+    const lengthCm = parseFloat(prod.length || prod.length_cm || 0);
+    const widthCm = parseFloat(prod.width || prod.width_cm || 0);
+    const heightCm = parseFloat(prod.height || prod.height_cm || 0);
+    const cbmPerUnit = (lengthCm > 0 && widthCm > 0 && heightCm > 0)
+        ? (lengthCm * widthCm * heightCm) / 1000000
+        : (parseFloat(prod.volume_cbm || prod.volume || 0) || Math.max(0.01, parseFloat((weight / 250).toFixed(4))));
+    const subtotalWeight = weight * defaultQty;
 
-    window.updateItemField = function(dropIdx, itemIdx, field, val) {
-        roState.delivery_points[dropIdx].items[itemIdx][field] = val;
-    };
+    const row = document.createElement('tr');
+    row.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors';
+    row.dataset.productId = prod.id;
+    row.dataset.weight = weight;
+    row.dataset.cbm = cbmPerUnit;
 
-    window.addItemToDrop = function(dropIdx) {
-        roState.delivery_points[dropIdx].items.push({
-            product_id: 1,
-            cargo_type_id: 1,
-            quantity: 10,
-            unit_price: 150000,
-            notes: ''
+    row.innerHTML = `
+        <td class="py-3 px-4 font-bold text-slate-500 prod-row-no">1</td>
+        <td class="py-3 px-4">
+            <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-mono text-[11px] font-bold">
+                    ${prod.sku || prod.code || 'SKU-' + prod.id}
+                </span>
+                <span class="font-bold text-slate-800 dark:text-slate-200">${prod.name}</span>
+            </div>
+        </td>
+        <td class="py-3 px-2 text-center">
+            <input type="number" min="1" value="${defaultQty}" class="prod-qty w-24 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-center font-bold" oninput="calculateCargoTotals()" />
+        </td>
+        <td class="py-3 px-3 text-right font-medium text-slate-600 dark:text-slate-400 prod-unit-weight">
+            ${weight.toLocaleString('id-ID')} kg
+        </td>
+        <td class="py-3 px-4 text-right font-black text-slate-800 dark:text-slate-200 prod-subtotal-weight">
+            ${subtotalWeight.toLocaleString('id-ID')} kg
+        </td>
+        <td class="py-3 px-2 text-center">
+            <button type="button" onclick="removeProductRow(this)" class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-all" title="Hapus Barang">
+                <iconify-icon icon="solar:trash-bin-trash-linear" class="text-base"></iconify-icon>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(row);
+    calculateCargoTotals();
+}
+
+window.removeProductRow = function(btn) {
+    const row = btn.closest('tr');
+    if (row) {
+        row.remove();
+        calculateCargoTotals();
+    }
+};
+
+window.calculateCargoTotals = function() {
+    const rows = document.querySelectorAll('#productRowsBody tr');
+    let totalQty = 0;
+    let totalWeight = 0;
+    let totalVolume = 0;
+    const items = [];
+
+    rows.forEach((r, idx) => {
+        const noEl = r.querySelector('.prod-row-no');
+        if (noEl) noEl.innerText = idx + 1;
+        const prodId = r.dataset.productId;
+        const rawW = parseFloat(r.dataset.weight || 0);
+        const weight = (rawW > 0) ? rawW : 5;
+        const cbm = parseFloat(r.dataset.cbm || 0);
+        const qtyInput = r.querySelector('.prod-qty');
+        const qty = parseFloat(qtyInput?.value || 0);
+        const subtotal = weight * qty;
+        const subtotalCbm = cbm * qty;
+
+        totalQty += qty;
+        totalWeight += subtotal;
+        totalVolume += subtotalCbm;
+
+        const subtotalEl = r.querySelector('.prod-subtotal-weight');
+        if (subtotalEl) subtotalEl.innerText = `${subtotal.toLocaleString('id-ID')} kg`;
+
+        items.push({
+            product_id: prodId,
+            quantity: qty,
+            weight_per_unit: weight,
+            subtotal_weight: subtotal,
+            volume_cbm: cbm,
+            subtotal_volume: subtotalCbm
         });
-        renderDeliveryPoints();
+    });
+
+    roState.total_qty = totalQty;
+    roState.total_weight = totalWeight;
+    roState.total_volume = parseFloat(totalVolume.toFixed(2));
+    roState.items = items;
+
+    const qtyDisplay = document.getElementById('totalQtyDisplay');
+    const weightDisplay = document.getElementById('totalWeightDisplay');
+
+    if (qtyDisplay) qtyDisplay.innerText = `${totalQty.toLocaleString('id-ID')} unit`;
+    if (weightDisplay) {
+        const ton = (totalWeight / 1000).toFixed(2);
+        weightDisplay.innerText = `${totalWeight.toLocaleString('id-ID')} kg (${ton} ton)`;
+    }
+
+    // Auto recommend suitable truck fleet based on cargo weight
+    autoRecommendFleet(totalWeight);
+};
+
+// Auto recommend fleet type based on weight
+function autoRecommendFleet(weightKg) {
+    let recommendedId = 1;
+    if (weightKg <= 2000) recommendedId = 1; // CDE
+    else if (weightKg <= 4000) recommendedId = 2; // CDD
+    else if (weightKg <= 8000) recommendedId = 3; // Fuso
+    else recommendedId = 4; // Tronton Wingbox
+
+    const badge = document.getElementById('fleetRecommendedBadge');
+    const badgeText = document.getElementById('recommendedFleetText');
+    const spec = fleetSpecs[recommendedId];
+
+    if (badge && badgeText && spec) {
+        badge.classList.remove('hidden');
+        badgeText.innerText = `Rekomendasi Muatan: ${spec.name}`;
+    }
+
+    // Only auto-select if current fleet cannot hold weight
+    const currentSpec = fleetSpecs[roState.fleet_type_id];
+    if (currentSpec && currentSpec.capacity_kg < weightKg) {
+        selectFleet(recommendedId);
+    }
+}
+
+// Select Fleet Type (Rate of Truck Direct)
+window.selectFleet = function(fleetId) {
+    roState.fleet_type_id = fleetId;
+    const spec = fleetSpecs[fleetId] || fleetSpecs[1];
+    roState.fleet_name = spec.name;
+
+    const hiddenFleetInput = document.getElementById('selectedFleetTypeId');
+    if (hiddenFleetInput) hiddenFleetInput.value = fleetId;
+
+    const badgeText = document.getElementById('selectedFleetBadgeText');
+    if (badgeText) badgeText.innerText = `Armada: ${spec.name}`;
+
+    // Highlight card
+    document.querySelectorAll('.fleet-card').forEach(card => {
+        const id = card.getAttribute('data-fleet-id');
+        const badge = card.querySelector('.fleet-badge');
+        if (id == fleetId) {
+            card.className = 'fleet-card cursor-pointer p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/40 dark:bg-blue-950/40 relative flex flex-col justify-between transition-all shadow-md';
+            if (badge) {
+                badge.className = 'fleet-badge px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white';
+                badge.classList.remove('hidden');
+            }
+        } else {
+            card.className = 'fleet-card cursor-pointer p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 relative flex flex-col justify-between transition-all hover:border-blue-400';
+            if (badge) {
+                badge.classList.add('hidden');
+            }
+        }
+    });
+
+    calculateDynamicTariff();
+};
+
+// Calculate Dynamic Truck Rate
+window.calculateDynamicTariff = async function() {
+    const spec = fleetSpecs[roState.fleet_type_id] || fleetSpecs[1];
+    let baseRate = spec.default_base;
+    let shunting = 450000;
+
+    const originCity = roState.origin_city_code || '31.71';
+    const destCity = roState.destination_city_code || '32.73';
+
+    try {
+        const res = await axios.post('/api/request-orders/calculate-pricing', {
+            origin_city_code: originCity,
+            destination_city_code: destCity,
+            fleet_type_id: roState.fleet_type_id,
+            total_weight_kg: roState.total_weight,
+            is_direct_route: true
+        });
+
+        const data = res.data?.data || {};
+        const rates = data.rates || {};
+        baseRate = Number(rates.linehaul_price || rates.subtotal_base_rate || data.base_rate || baseRate);
+        shunting = Number(rates.shunting_price || data.shunting_price || shunting);
+    } catch (err) {
+        console.info('Pricing API using contract table rates for route', originCity, '->', destCity);
+    }
+
+    const insurance = Math.round(baseRate * 0.0015);
+    const total = baseRate + shunting + insurance;
+
+    roState.pricing = {
+        base_rate: baseRate,
+        shunting: shunting,
+        insurance: insurance,
+        total: total
     };
 
-    window.removeItemFromDrop = function(dropIdx, itemIdx) {
-        roState.delivery_points[dropIdx].items.splice(itemIdx, 1);
-        renderDeliveryPoints();
-    };
+    // Update displays in Step 4
+    const baseEl = document.getElementById('rateBaseDisplay');
+    const shuntingEl = document.getElementById('rateShuntingDisplay');
+    const insuranceEl = document.getElementById('rateInsuranceDisplay');
+    const totalEl = document.getElementById('rateTotalDisplay');
 
-    // Calculate Dynamic Pricing in Step 5
-    async function calculateAndRenderTariffSummary() {
-        const summaryCard = document.getElementById('step-5-tariff-breakdown');
-        summaryCard.innerHTML = '<div class="py-6 text-center text-slate-500 text-sm">Menghitung kalkulasi tarif dinamis berdasarkan kontrak...</div>';
+    if (baseEl) baseEl.innerText = `Rp ${baseRate.toLocaleString('id-ID')}`;
+    if (shuntingEl) shuntingEl.innerText = `Rp ${shunting.toLocaleString('id-ID')}`;
+    if (insuranceEl) insuranceEl.innerText = `Rp ${insurance.toLocaleString('id-ID')}`;
+    if (totalEl) totalEl.innerText = `Rp ${total.toLocaleString('id-ID')}`;
 
-        try {
-            const response = await axios.post('/api/internal/corporate/request-orders/calculate-pricing', {
-                logistic_id: roState.logistic_id || 1,
-                origin_city_code: roState.origin_city_code || '31.71',
-                destination_city_code: roState.destination_city_code || '35.78',
-                fleet_type_id: roState.fleet_type_id || 1,
-                cargo_type_id: 1,
-                waypoints_count: roState.delivery_points.length
-            });
+    // Update current fleet rate display on the card
+    const cdeRate = document.getElementById('cde-rate-display');
+    const cddRate = document.getElementById('cdd-rate-display');
+    const fusoRate = document.getElementById('fuso-rate-display');
+    const trontonRate = document.getElementById('tronton-rate-display');
 
-            const pricing = response.data?.data || {};
-            const rates = pricing.rates || {};
+    if (cdeRate && roState.fleet_type_id === 1) cdeRate.innerText = `Rp ${baseRate.toLocaleString('id-ID')}`;
+    if (cddRate && roState.fleet_type_id === 2) cddRate.innerText = `Rp ${baseRate.toLocaleString('id-ID')}`;
+    if (fusoRate && roState.fleet_type_id === 3) fusoRate.innerText = `Rp ${baseRate.toLocaleString('id-ID')}`;
+    if (trontonRate && roState.fleet_type_id === 4) trontonRate.innerText = `Rp ${baseRate.toLocaleString('id-ID')}`;
+};
 
-            summaryCard.innerHTML = `
-                <div class="space-y-3">
-                    <div class="flex justify-between text-sm text-slate-600">
-                        <span>Tarif Antar Kota (Linehaul):</span>
-                        <span class="font-semibold text-slate-800">${window.formatCurrency(rates.linehaul_price || 3500000)}</span>
-                    </div>
-                    <div class="flex justify-between text-sm text-slate-600">
-                        <span>Biaya Langsir Luar Kota (Shunting):</span>
-                        <span class="font-semibold text-slate-800">${window.formatCurrency(rates.shunting_price || 450000)}</span>
-                    </div>
-                    <div class="flex justify-between text-sm text-slate-600">
-                        <span>Langsir Dalam Kota (Inner-City):</span>
-                        <span class="font-semibold text-slate-800">${window.formatCurrency(rates.inner_city_shunting_price || 250000)}</span>
-                    </div>
-                    <div class="pt-3 border-t border-slate-200 flex justify-between text-base font-bold text-corporate-800">
-                        <span>Total Estimasi Ongkos Kirim:</span>
-                        <span>${window.formatCurrency(pricing.total_estimated_cost || 4200000)}</span>
-                    </div>
-                    <div class="p-3 bg-blue-50 text-blue-800 rounded-lg text-xs mt-2">
-                        🔒 Tarif ini akan dibekukan ke dalam <b>snapshot_pricing</b> saat pesanan diajukan.
-                    </div>
-                </div>
-            `;
-        } catch (e) {
-            summaryCard.innerHTML = `
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between font-bold text-slate-800">
-                        <span>Total Estimasi Tarif:</span>
-                        <span>Rp 4.200.000</span>
-                    </div>
-                </div>
-            `;
+// Wizard Step Navigation
+window.goToStep = function(step) {
+    if (step < 1 || step > totalSteps) return;
+
+    if (step > currentStep) {
+        if (!validateStep(currentStep)) return;
+    }
+
+    for (let i = 1; i <= totalSteps; i++) {
+        const content = document.getElementById(`step-content-${i}`);
+        const nav = document.getElementById(`step-nav-${i}`);
+
+        if (content) {
+            if (i === step) content.classList.remove('hidden');
+            else content.classList.add('hidden');
+        }
+
+        if (nav) {
+            const badge = nav.querySelector('div');
+            if (i === step) {
+                nav.classList.remove('opacity-40');
+                if (badge) badge.className = 'w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-md shadow-blue-600/30';
+            } else if (i < step) {
+                nav.classList.remove('opacity-40');
+                if (badge) badge.className = 'w-8 h-8 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs';
+            } else {
+                nav.classList.add('opacity-40');
+                if (badge) badge.className = 'w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold flex items-center justify-center text-xs';
+            }
         }
     }
 
-    // Submit Request Order
-    window.submitRequestOrder = async function() {
-        const submitBtn = document.getElementById('submit-ro-btn');
-        if (submitBtn) submitBtn.disabled = true;
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
 
-        try {
-            const response = await axios.post('/api/internal/corporate/request-orders', roState);
-            window.showToast('Request Order berhasil diajukan!', 'success');
-            setTimeout(() => {
-                window.location.href = '/request-orders';
-            }, 1000);
-        } catch (e) {
-            if (submitBtn) submitBtn.disabled = false;
-            window.showToast(e.response?.data?.message || 'Gagal mengajukan Request Order.', 'error');
+    if (prevBtn) {
+        if (step === 1) prevBtn.classList.add('hidden');
+        else prevBtn.classList.remove('hidden');
+    }
+
+    if (nextBtn) {
+        if (step === totalSteps) nextBtn.classList.add('hidden');
+        else nextBtn.classList.remove('hidden');
+    }
+
+    if (submitBtn) {
+        if (step === totalSteps) submitBtn.classList.remove('hidden');
+        else submitBtn.classList.add('hidden');
+    }
+
+    currentStep = step;
+
+    if (currentStep === 4) {
+        calculateDynamicTariff();
+    } else if (currentStep === 5) {
+        populateReviewStep();
+    }
+
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+};
+
+window.nextStep = function() {
+    goToStep(currentStep + 1);
+};
+
+window.prevStep = function() {
+    goToStep(currentStep - 1);
+};
+
+// Validate steps
+function validateStep(step) {
+    if (step === 1) {
+        const whId = document.getElementById('hidden-originWarehouse')?.value;
+        const dep = document.getElementById('departureDate')?.value;
+        const pic = document.getElementById('shipperPic')?.value;
+        const phone = document.getElementById('shipperPhone')?.value;
+
+        if (!whId) {
+            window.Alert ? window.Alert.toast('Silakan pilih Gudang Asal menggunakan picker.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Silakan pilih Gudang Asal pemuatan.' });
+            return false;
         }
+        if (!dep) {
+            window.Alert ? window.Alert.toast('Silakan tentukan Jadwal Muat (Departure Date).', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Silakan tentukan Jadwal Muat.' });
+            return false;
+        }
+        if (!pic || !phone) {
+            window.Alert ? window.Alert.toast('Lengkapi nama PIC dan nomor telepon pemuatan.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Silakan lengkapi kontak dan telepon PIC.' });
+            return false;
+        }
+
+        roState.origin_warehouse_id = whId;
+        roState.departure_date = dep;
+        roState.shipper_pic = pic;
+        roState.shipper_phone = phone;
+        roState.shipper_notes = document.getElementById('shipperNotes')?.value || '';
+    } else if (step === 2) {
+        const rec = document.querySelector('.drop-recipient')?.value;
+        const cityId = document.getElementById('hidden-destinationCity')?.value;
+        const phone = document.querySelector('.drop-phone')?.value;
+        const addr = document.querySelector('.drop-address')?.value;
+
+        if (!rec) {
+            window.Alert ? window.Alert.toast('Silakan masukkan Nama Penerima / Toko.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Nama Penerima wajib diisi.' });
+            return false;
+        }
+        if (!cityId) {
+            window.Alert ? window.Alert.toast('Silakan pilih Kota / Kabupaten tujuan menggunakan picker.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Kota / Kabupaten tujuan wajib dipilih.' });
+            return false;
+        }
+        if (!phone) {
+            window.Alert ? window.Alert.toast('Silakan masukkan Nomor Telepon penerima.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Telepon penerima wajib diisi.' });
+            return false;
+        }
+        if (!addr) {
+            window.Alert ? window.Alert.toast('Silakan masukkan Alamat Lengkap Bongkar.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Alamat bongkar wajib diisi.' });
+            return false;
+        }
+
+        roState.recipient_name = rec;
+        roState.recipient_phone = phone;
+        roState.destination_city_code = cityId;
+        roState.destination_address = addr;
+    } else if (step === 3) {
+        if (!roState.items || roState.items.length === 0 || roState.total_qty <= 0) {
+            window.Alert ? window.Alert.toast('Silakan pilih minimal 1 produk kargo SKU.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Muatan produk belum ditambahkan.' });
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Populate Step 5 Review
+function populateReviewStep() {
+    const originText = roState.origin_name ? `${roState.origin_name} (Hub Asal)` : 'Gudang Utama Korporasi';
+    const destCityText = document.getElementById('display-destinationCity')?.value || roState.destination_city_name || 'Kota Bandung';
+    const destText = `${roState.recipient_name || 'Toko Mitra'} - ${destCityText}`;
+    const fleetText = roState.fleet_name || 'CDE Box (Engkel)';
+    const weightText = `${roState.total_weight.toLocaleString('id-ID')} kg (${(roState.total_weight / 1000).toFixed(2)} ton) • ${roState.total_qty} Unit`;
+    const costText = `Rp ${roState.pricing.total.toLocaleString('id-ID')}`;
+
+    const revOrigin = document.getElementById('reviewOrigin');
+    const revDest = document.getElementById('reviewDestinations');
+    const revDep = document.getElementById('reviewDeparture');
+    const revFleet = document.getElementById('reviewFleet');
+    const revWeight = document.getElementById('reviewWeight');
+    const revCost = document.getElementById('reviewTotalCost');
+
+    if (revOrigin) revOrigin.innerText = originText;
+    if (revDest) revDest.innerText = destText;
+    if (revDep) revDep.innerText = roState.departure_date ? roState.departure_date.replace('T', ' ') : '-';
+    if (revFleet) revFleet.innerText = fleetText;
+    if (revWeight) revWeight.innerText = weightText;
+    if (revCost) revCost.innerText = costText;
+}
+
+// Submit Request Order
+window.submitRequestOrder = async function() {
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<iconify-icon icon="solar:spinner-line" class="animate-spin text-base"></iconify-icon><span>Memproses RO...</span>';
+    }
+
+    const payload = {
+        order_date: roState.order_date,
+        departure_date: roState.departure_date || new Date().toISOString().slice(0, 16),
+        origin_warehouse_id: roState.origin_warehouse_id || 1,
+        origin_city_code: roState.origin_city_code || '31.71',
+        destination_city_code: roState.destination_city_code || '32.73',
+        fleet_type_id: roState.fleet_type_id || 1,
+        cargo_type_id: 1,
+        total_weight: roState.total_weight || 0,
+        total_weight_kg: roState.total_weight || 0,
+        total_volume: roState.total_volume || 0,
+        total_volume_cbm: roState.total_volume || 0,
+        logistic_id: 1, // Logistik Merah Putih primary contractor
+        shipper_name: roState.shipper_pic || 'PIC Gudang',
+        shipper_phone: roState.shipper_phone || '08123456789',
+        notes: roState.shipper_notes || '',
+        po_number: document.getElementById('poReference')?.value || '',
+        delivery_points: [
+            {
+                stop_sequence: 1,
+                delivery_type: 1,
+                city_code: roState.destination_city_code || '32.73',
+                recipient_name: roState.recipient_name || 'Toko Mitra Grosir',
+                recipient_phone: roState.recipient_phone || '081987654321',
+                address: roState.destination_address || 'Alamat Penerima',
+                total_weight_kg: roState.total_weight || 0,
+                total_volume_cbm: roState.total_volume || 0,
+                items: roState.items
+            }
+        ],
+        items: roState.items
     };
-});
+
+    try {
+        const res = await axios.post('/api/request-orders', payload);
+        Swal.fire({
+            icon: 'success',
+            title: 'Request Order Terbit!',
+            text: 'Order pemesanan armada truk berhasil dibuat dan diteruskan ke sistem logistik.',
+            confirmButtonColor: '#2563eb'
+        }).then(() => {
+            window.location.href = '/request-orders';
+        });
+    } catch (err) {
+        console.error('Submit Request Order error:', err);
+        const errMsg = err.response?.data?.message || 'Gagal membuat Request Order. Silakan periksa kembali data Anda.';
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Membuat RO',
+            text: errMsg,
+            confirmButtonColor: '#2563eb'
+        });
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<iconify-icon icon="solar:check-circle-bold" class="text-base"></iconify-icon><span>Kirim Request Order Sekarang</span>';
+        }
+    }
+};

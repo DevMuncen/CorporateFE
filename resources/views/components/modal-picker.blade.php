@@ -1,56 +1,75 @@
 @props([
     'id', 
     'name', 
-    'label', 
+    'label' => null, 
     'url', 
-    'placeholder' => 'Select Item', 
-    'required' => false
+    'placeholder' => 'Pilih Item...', 
+    'required' => false,
+    'value' => null,
+    'displayValue' => null
 ])
 
-<div class="mb-4" id="picker-container-{{ $id }}" data-modal-picker data-id="{{ $id }}" data-name="{{ $name }}" data-url="{{ $url }}">
-    <label class="text-dark dark:text-darklink font-semibold mb-2 block">
-        {{ $label }}
-        @if($required)
-            <span class="text-red-500">*</span>
-        @endif
-    </label>
+<div class="space-y-1.5" id="picker-container-{{ $id }}" data-modal-picker data-id="{{ $id }}" data-name="{{ $name }}" data-url="{{ $url }}">
+    @if($label)
+        <label class="block font-bold text-xs text-slate-700 dark:text-slate-300">
+            {{ $label }}
+            @if($required)
+                <span class="text-rose-500">*</span>
+            @endif
+        </label>
+    @endif
     
     <div class="flex gap-2">
-        <input type="hidden" name="{{ $name }}" id="hidden-{{ $id }}" {{ $required ? 'required' : '' }}>
-        <input type="text" id="display-{{ $id }}" class="form-control py-2 w-full bg-gray-100 dark:bg-gray-700 cursor-not-allowed" placeholder="{{ $placeholder }}" readonly>
+        <input type="hidden" name="{{ $name }}" id="hidden-{{ $id }}" value="{{ $value ?? '' }}" {{ $required ? 'required' : '' }}>
+        <input type="text" id="display-{{ $id }}" value="{{ $displayValue ?? '' }}" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 placeholder:font-normal focus:ring-2 focus:ring-blue-600 focus:outline-none cursor-pointer" placeholder="{{ $placeholder }}" onclick="window.openModalPicker('{{ $id }}')" oninput="const h = document.getElementById('hidden-{{ $id }}'); if (h) { h.value = this.value; h.dataset.item = JSON.stringify({ id: this.value, name: this.value }); h.dispatchEvent(new CustomEvent('change', { bubbles: true, detail: { item: { id: this.value, name: this.value } } })); }">
         
-        <button type="button" class="btn btn-primary bg-primary text-white py-2 px-4 rounded-md" data-hs-overlay="#modal-picker-{{ $id }}" data-hs-overlay-options='{"isClosePrev": false, "backdropClasses": "hs-overlay-backdrop transition duration fixed inset-0 bg-gray-900/50 dark:bg-neutral-900/80 !z-[70]"}'>
-            <iconify-icon icon="solar:rounded-magnifer-linear" class="text-lg"></iconify-icon>
+        <button type="button" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center transition-colors shadow-sm shadow-blue-600/20" onclick="window.openModalPicker('{{ $id }}')" title="Pilih {{ $label ?? 'Item' }}">
+            <iconify-icon icon="solar:rounded-magnifer-linear" class="text-base"></iconify-icon>
         </button>
-        <button type="button" class="btn bg-red-100 text-red-600 hover:bg-red-200 py-2 px-4 rounded-md hidden" id="clear-{{ $id }}">
-            <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon>
+        <button type="button" class="px-3 py-2.5 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 rounded-xl flex items-center justify-center transition-colors {{ empty($value) ? 'hidden' : '' }}" id="clear-{{ $id }}" title="Hapus Pilihan">
+            <iconify-icon icon="solar:trash-bin-trash-linear" class="text-base"></iconify-icon>
         </button>
     </div>
-    <div id="{{ $name }}-error" class="text-red-500 text-sm mt-1 hidden"></div>
+    <div id="{{ $name }}-error" class="text-rose-500 text-xs mt-1 hidden"></div>
 
-    <!-- The Modal -->
-    <x-modal id="modal-picker-{{ $id }}" title="Select {{ $label }}" size="lg" zIndex="z-[80]">
-        <div class="mb-4">
-            <input type="text" id="search-{{ $id }}" class="form-control py-2 w-full" placeholder="Search...">
+    <!-- Standalone Modal (Zero Backdrop Conflict) -->
+    <div id="modal-picker-{{ $id }}" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs" style="display: none;" onclick="window.closeModalPicker('{{ $id }}')">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 relative z-10 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+            <!-- Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700 mb-3">
+                <h3 class="text-sm font-black text-slate-900 dark:text-white">Pilih {{ $label ?? 'Item' }}</h3>
+                <button type="button" onclick="window.closeModalPicker('{{ $id }}')" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <iconify-icon icon="solar:close-circle-bold" class="text-xl"></iconify-icon>
+                </button>
+            </div>
+
+            <!-- Search -->
+            <div class="mb-3">
+                <div class="relative">
+                    <input type="text" id="search-{{ $id }}" class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none text-slate-800 dark:text-slate-100" placeholder="Ketik kata kunci untuk mencari...">
+                    <iconify-icon icon="solar:rounded-magnifer-linear" class="absolute left-3 top-2.5 text-slate-400 text-sm"></iconify-icon>
+                </div>
+            </div>
+            
+            <!-- Table -->
+            <div class="overflow-y-auto overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-700 flex-1 max-h-72">
+                <table class="w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-700">
+                    <thead class="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10">
+                        <tr>
+                            <th scope="col" class="px-4 py-2.5">Kode / Ref</th>
+                            <th scope="col" class="px-4 py-2.5">Nama / Lokasi</th>
+                            <th scope="col" class="px-4 py-2.5 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-{{ $id }}" class="divide-y divide-slate-100 dark:divide-slate-700/60 bg-white dark:bg-slate-800">
+                        <!-- Data rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination Placeholder -->
+            <div id="pagination-{{ $id }}" class="mt-3 flex justify-between items-center text-xs pt-2 border-t border-slate-100 dark:border-slate-700">
+            </div>
         </div>
-        
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Code / Ref</th>
-                        <th scope="col" class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Name / Title</th>
-                        <th scope="col" class="px-6 py-3 text-end text-xs font-medium text-gray-500 uppercase">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-{{ $id }}" class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <!-- Data rendered via JS -->
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination Placeholder -->
-        <div id="pagination-{{ $id }}" class="mt-4 flex justify-between items-center">
-        </div>
-    </x-modal>
+    </div>
 </div>

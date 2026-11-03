@@ -1,6 +1,7 @@
 @props([
     'name', 
     'label', 
+    'id' => null,
     'type' => 'text', 
     'value' => '', 
     'placeholder' => '', 
@@ -8,8 +9,12 @@
     'readonly' => false,
 ])
 
+@php
+    $inputId = $id ?? $name;
+@endphp
+
 <div class="mb-4">
-    <label for="{{ $name }}" class="text-dark dark:text-darklink font-semibold mb-2 block">
+    <label for="{{ $inputId }}" class="text-dark dark:text-darklink font-semibold mb-2 block">
         {{ $label }}
         @if($required)
             <span class="text-red-500">*</span>
@@ -17,7 +22,7 @@
     </label>
     <input 
         type="{{ $type }}" 
-        id="{{ $name }}" 
+        id="{{ $inputId }}" 
         name="{{ $name }}" 
         value="{{ old($name, $value) }}" 
         placeholder="{{ $placeholder }}" 
@@ -27,3 +32,4 @@
     />
     <div id="{{ $name }}-error" class="text-red-500 text-sm mt-1 hidden"></div>
 </div>
+

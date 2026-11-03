@@ -1,4 +1,4 @@
-﻿<div class="py-3 px-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shadow-none shrink-0 h-[70px] bg-white dark:bg-slate-900 relative z-20 overflow-hidden">
+<div class="py-3 px-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 shadow-none shrink-0 h-[70px] bg-white dark:bg-slate-900 relative z-20 overflow-hidden">
   <x-logo />
 </div>
 
@@ -82,7 +82,7 @@
             <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('distributors*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/distributors">
               <div class="flex items-center gap-3">
                 <iconify-icon icon="solar:buildings-2-bold-duotone" class="shrink-0 text-xl {{ request()->is('distributors*') ? 'text-white' : 'text-teal-600' }}"></iconify-icon>
-                <span class="hide-menu shrink-0">{{ __('Mitra Distributor') }}</span>
+                <span class="hide-menu shrink-0">{{ __('Pelanggan (Customer)') }}</span>
               </div>
               @if(request()->is('distributors*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
             </a>
@@ -100,28 +100,19 @@
         </button>
         <ul id="menu-operations" class="mt-1 space-y-1">
           <li class="sidebar-item">
-            <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('request-orders') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/request-orders">
+            <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('request-orders*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md shadow-blue-900/25' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/request-orders">
               <div class="flex items-center gap-3">
-                <iconify-icon icon="solar:cart-bold-duotone" class="shrink-0 text-xl {{ request()->is('request-orders') ? 'text-white' : 'text-blue-600' }}"></iconify-icon>
-                <span class="hide-menu shrink-0">{{ __('Request Orders (RO)') }}</span>
+                <iconify-icon icon="solar:cart-bold-duotone" class="shrink-0 text-xl {{ request()->is('request-orders*') ? 'text-white' : 'text-blue-600' }}"></iconify-icon>
+                <span class="hide-menu shrink-0 {{ request()->is('request-orders*') ? '!text-white font-bold' : '' }}">{{ __('Request Orders (RO)') }}</span>
               </div>
-              @if(request()->is('request-orders'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('request-orders/create') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/request-orders/create">
-              <div class="flex items-center gap-3">
-                <iconify-icon icon="solar:cart-plus-bold-duotone" class="shrink-0 text-xl {{ request()->is('request-orders/create') ? 'text-white' : 'text-emerald-600' }}"></iconify-icon>
-                <span class="hide-menu shrink-0">{{ __('+ Buat RO Wizard') }}</span>
-              </div>
-              @if(request()->is('request-orders/create'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
+              @if(request()->is('request-orders*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
             </a>
           </li>
           <li class="sidebar-item">
             <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('distributor-orders*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/distributor-orders">
               <div class="flex items-center gap-3">
                 <iconify-icon icon="solar:bag-3-bold-duotone" class="shrink-0 text-xl {{ request()->is('distributor-orders*') ? 'text-white' : 'text-amber-600' }}"></iconify-icon>
-                <span class="hide-menu shrink-0">{{ __('Pesanan Distributor') }}</span>
+                <span class="hide-menu shrink-0">{{ __('Pesanan Customer') }}</span>
               </div>
               @if(request()->is('distributor-orders*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
             </a>
@@ -190,7 +181,7 @@
             <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('finance/distributor-invoices*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/finance/distributor-invoices">
               <div class="flex items-center gap-3">
                 <iconify-icon icon="solar:bill-list-bold-duotone" class="shrink-0 text-xl {{ request()->is('finance/distributor-invoices*') ? 'text-white' : 'text-purple-600' }}"></iconify-icon>
-                <span class="hide-menu shrink-0">{{ __('Faktur Distributor') }}</span>
+                <span class="hide-menu shrink-0">{{ __('Faktur Penagihan Customer') }}</span>
               </div>
               @if(request()->is('finance/distributor-invoices*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
             </a>
@@ -202,6 +193,15 @@
                 <span class="hide-menu shrink-0">{{ __('Tagihan Ongkir Logistik') }}</span>
               </div>
               @if(request()->is('finance/corporate-invoices*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('finance/bank-accounts*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/finance/bank-accounts">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="solar:card-2-bold-duotone" class="shrink-0 text-xl {{ request()->is('finance/bank-accounts*') ? 'text-white' : 'text-indigo-600' }}"></iconify-icon>
+                <span class="hide-menu shrink-0">{{ __('Rekening Bank & VA') }}</span>
+              </div>
+              @if(request()->is('finance/bank-accounts*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
             </a>
           </li>
         </ul>

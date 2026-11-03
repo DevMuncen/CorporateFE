@@ -1,11 +1,14 @@
 <div class="w-full mx-auto px-4 lg:py-3 py-2.5 lg:px-6 bg-white dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800" aria-label="Global">
   <div class="relative flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <!-- Navigation Toggle -->
-      <a class="text-2xl icon-hover cursor-pointer text-slate-600 dark:text-slate-300 sidebartoggler h-9 w-9 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex justify-center items-center rounded-xl transition-colors"
-        data-hs-overlay="#application-sidebar-brand" aria-controls="application-sidebar-brand" aria-label="Toggle navigation">
-        <iconify-icon icon="solar:hamburger-menu-linear" class="relative z-1"></iconify-icon>
-      </a>
+      <!-- Universal Sidebar Toggle -->
+      <button type="button" 
+        class="text-2xl icon-hover cursor-pointer text-slate-600 dark:text-slate-300 sidebartoggler h-9 w-9 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex justify-center items-center rounded-xl transition-colors border-0 bg-transparent focus:outline-none shrink-0"
+        data-hs-overlay="#application-sidebar-brand"
+        onclick="window.toggleAnySidebar(event)" 
+        aria-label="Toggle navigation">
+        <iconify-icon icon="solar:hamburger-menu-linear" class="relative z-1 text-xl"></iconify-icon>
+      </button>
 
       <!-- Quick Search Bar -->
       <div class="hidden md:flex items-center">
@@ -13,7 +16,7 @@
           <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
             <iconify-icon icon="solar:magnifer-linear" class="text-base"></iconify-icon>
           </div>
-          <input type="text" placeholder="{{ __('Cari SKU, Gudang, Waybill...') }}" class="form-control ps-9 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full transition-all">
+          <input type="text" placeholder="{{ __('Cari SKU, Gudang, Waybill...') }}" class="form-control !ps-10 !pl-10 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full transition-all">
         </div>
       </div>
     </div>
@@ -43,17 +46,6 @@
       <button type="button" class="hs-dark-mode-active:flex cursor-pointer icon-hover hidden hs-dark-mode group items-center font-medium hover:text-amber-400 text-slate-300 h-9 w-9 hover:bg-slate-800 justify-center rounded-xl border border-slate-700 transition-colors" data-hs-theme-click-value="light" id="light-layout" title="Switch to Light Mode">
         <iconify-icon icon="solar:sun-2-linear" class="text-lg relative text-amber-400"></iconify-icon>
       </button>
-
-      <!-- Notifications Bell -->
-      <div class="hs-dropdown relative inline-flex">
-        <button type="button" class="icon-hover flex cursor-pointer items-center justify-center relative h-9 w-9 rounded-xl text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors" title="Notifications">
-          <iconify-icon icon="solar:bell-linear" class="text-lg"></iconify-icon>
-          <span class="absolute top-1.5 right-1.5 flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-          </span>
-        </button>
-      </div>
 
       <!-- Profile Avatar Dropdown -->
       <div class="hs-dropdown relative inline-flex [--placement:bottom-right]">

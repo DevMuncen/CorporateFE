@@ -36,6 +36,11 @@ class InventoryController extends ProxyController
         return $this->forward($request, 'GET', '/api/corporate/item-outs', $request->all());
     }
 
+    public function proxyStocks(Request $request)
+    {
+        return $this->forward($request, 'GET', '/api/corporate/inventory/stocks', $request->all());
+    }
+
     public function proxyStoreItemOut(Request $request)
     {
         return $this->forward($request, 'POST', '/api/corporate/item-outs', $request->all());

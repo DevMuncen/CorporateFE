@@ -1,21 +1,26 @@
 @props([
     'name', 
     'label', 
+    'id' => null,
     'options' => [], 
     'selected' => '', 
     'required' => false,
     'placeholder' => 'Select an option'
 ])
 
+@php
+    $inputId = $id ?? $name;
+@endphp
+
 <div class="mb-4">
-    <label for="{{ $name }}" class="text-dark dark:text-darklink font-semibold mb-2 block">
+    <label for="{{ $inputId }}" class="text-dark dark:text-darklink font-semibold mb-2 block">
         {{ $label }}
         @if($required)
             <span class="text-red-500">*</span>
         @endif
     </label>
     <select 
-        id="{{ $name }}" 
+        id="{{ $inputId }}" 
         name="{{ $name }}" 
         {{ $required ? 'required' : '' }} 
         {{ $attributes->merge(['class' => 'form-control py-2 w-full']) }}
@@ -29,3 +34,4 @@
     </select>
     <div id="{{ $name }}-error" class="text-red-500 text-sm mt-1 hidden"></div>
 </div>
+

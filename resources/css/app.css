@@ -1,6 +1,6 @@
-﻿@import 'tailwindcss';
+@import 'tailwindcss';
 
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -136,9 +136,75 @@ html.dark .page-wrapper {
 
 html.dark .card,
 html.dark aside,
-html.dark header {
+html.dark header,
+html.dark .bg-white:not(.w-3\.5):not(.rounded-full) {
     background-color: #1e293b !important;
     border-color: #334155 !important;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/75,
+html.dark .bg-slate-50\/80,
+html.dark .bg-gray-50 {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-gray-100 {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html.dark table thead,
+html.dark table thead tr {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+html.dark table thead th {
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
+
+html.dark table tbody,
+html.dark table tbody tr {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+html.dark table tbody tr:hover {
+    background-color: #334155 !important;
+}
+
+html.dark table tbody td {
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+html.dark .divide-slate-200 > :not(:last-child),
+html.dark .divide-slate-100 > :not(:last-child),
+html.dark .divide-gray-200 > :not(:last-child),
+html.dark .border-slate-200,
+html.dark .border-slate-100,
+html.dark .border-gray-200 {
+    border-color: #334155 !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-gray-800,
+html.dark .text-gray-900,
+html.dark .text-dark {
+    color: #f8fafc !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600,
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+    color: #cbd5e1 !important;
 }
 
 html.dark input:not([type="checkbox"]):not([type="radio"]), 
@@ -186,7 +252,11 @@ html.dark h6 {
 
 /* Modal Stacking Hierarchy Rules */
 .hs-overlay-backdrop {
-    z-index: 40 !important;
+    display: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    z-index: -9999 !important;
+    opacity: 0 !important;
 }
 
 .hs-overlay:not(.hidden),
@@ -206,3 +276,40 @@ html.dark h6 {
 .toast-notification-layer {
     z-index: 100 !important;
 }
+
+/* Fix search input icon overlap with placeholder / text */
+.form-control.ps-9,
+.form-control.ps-10,
+.form-control.\!ps-10,
+.form-control.\!pl-10,
+input.search-icon-input {
+    padding-left: 2.75rem !important;
+    padding-inline-start: 2.75rem !important;
+}
+
+/* Sidebar & Hamburger Toggle Button Rules */
+.sidebartoggler {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+}
+
+#application-sidebar-brand {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-wrapper {
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Safeguard for white/light buttons with .btn class against theme.css .btn { color: #fff } */
+html:not(.dark) .btn.bg-white {
+    color: #334155 !important;
+    background-color: #ffffff !important;
+}
+html.dark .btn.bg-white {
+    color: #e2e8f0 !important;
+    background-color: #334155 !important;
+}
+

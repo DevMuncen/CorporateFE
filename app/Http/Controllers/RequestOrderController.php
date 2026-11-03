@@ -16,6 +16,11 @@ class RequestOrderController extends ProxyController
         return view('request-orders.create');
     }
 
+    public function show($id)
+    {
+        return view('request-orders.show', ['id' => $id]);
+    }
+
     public function distributorOrdersIndex()
     {
         return view('distributor-orders.index');

@@ -23,7 +23,8 @@
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">
-                            <th class="py-3.5 pl-6">Kode Gudang</th>
+                            <th class="py-3.5 pl-6 w-12">No</th>
+                            <th class="py-3.5">Kode Gudang</th>
                             <th class="py-3.5">Nama Gudang / Hub</th>
                             <th class="py-3.5">Kota / Lokasi</th>
                             <th class="py-3.5">Kontak PIC</th>
@@ -33,7 +34,7 @@
                     </thead>
                     <tbody id="warehousesTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-400">
+                            <td colspan="7" class="py-12 text-center text-slate-400">
                                 <div class="inline-flex items-center gap-2">
                                     <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                     <span>Memuat data gudang...</span>
@@ -48,60 +49,68 @@
     </div>
 
     <!-- Modal Form Gudang -->
-    <div id="warehouseModal" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 relative">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700 mb-4">
-                <h3 id="whModalTitle" class="text-base font-black text-slate-900 dark:text-white">Tambah Gudang Baru</h3>
+    <div id="warehouseModal" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-xs items-center justify-center p-2 sm:p-4" style="display: none;">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full h-full max-w-full flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+            <div class="flex items-center justify-between py-4 px-6 border-b border-slate-100 dark:border-slate-700 shrink-0">
+                <h3 id="whModalTitle" class="text-lg font-bold text-slate-900 dark:text-white">Tambah Gudang Baru</h3>
                 <button type="button" onclick="closeWarehouseModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                    <iconify-icon icon="solar:close-circle-bold" class="text-xl"></iconify-icon>
+                    <iconify-icon icon="solar:close-circle-bold" class="text-2xl"></iconify-icon>
                 </button>
             </div>
 
-            <form id="warehouseForm" onsubmit="saveWarehouse(event)" class="space-y-4 text-xs">
-                <input type="hidden" id="whId" />
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kode Gudang *</label>
-                        <input type="text" id="whCode" required placeholder="WH-CKR-01" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Gudang *</label>
-                        <input type="text" id="whName" required placeholder="Gudang Utama Cikarang" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+            <form id="warehouseForm" onsubmit="saveWarehouse(event)" class="flex flex-col flex-1 overflow-hidden text-xs">
+                <div class="p-6 md:p-8 overflow-y-auto flex-1">
+                    <input type="hidden" id="whId" />
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kode Gudang *</label>
+                            <input type="text" id="whCode" required placeholder="WH-CKR-01" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Gudang *</label>
+                            <input type="text" id="whName" required placeholder="Gudang Utama Cikarang" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+                        </div>
+                        <div>
+                            <x-modal-picker 
+                                id="whCityPicker" 
+                                name="city" 
+                                label="Kota / Kabupaten" 
+                                url="/api/wilayah/kota" 
+                                placeholder="Pilih Kota / Kabupaten..." 
+                                :required="true" 
+                            />
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kode Pos</label>
+                            <input type="text" id="whPostal" placeholder="17530" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Nama PIC *</label>
+                            <input type="text" id="whPic" required placeholder="Bpk. Herman" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Telepon PIC *</label>
+                            <input type="text" id="whPhone" required placeholder="081234567890" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Status Operasional *</label>
+                            <select id="whStatus" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
+                                <option value="1">Aktif</option>
+                                <option value="0">Inaktif</option>
+                            </select>
+                        </div>
+                        <div class="col-span-full">
+                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Alamat Lengkap *</label>
+                            <textarea id="whAddress" required rows="2" placeholder="Kawasan Industri Jababeka Blok C..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl"></textarea>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kota / Kabupaten *</label>
-                        <input type="text" id="whCity" required placeholder="Bekasi" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Nama PIC *</label>
-                        <input type="text" id="whPic" required placeholder="Bpk. Herman" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Telepon PIC *</label>
-                        <input type="text" id="whPhone" required placeholder="081234567890" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kode Pos</label>
-                        <input type="text" id="whPostal" placeholder="17530" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Alamat Lengkap *</label>
-                    <textarea id="whAddress" required rows="3" placeholder="Kawasan Industri Jababeka Blok C..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl"></textarea>
-                </div>
-
-                <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
-                    <button type="button" onclick="closeWarehouseModal()" class="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 transition-all">
+                <div class="flex items-center justify-end gap-3 py-3.5 px-6 border-t border-slate-100 dark:border-slate-700 shrink-0 bg-slate-50/50 dark:bg-slate-800/50">
+                    <button type="button" onclick="closeWarehouseModal()" class="px-5 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 transition-all">
                         Batal
                     </button>
-                    <button type="submit" class="px-5 py-2 rounded-xl text-white font-bold bg-blue-600 hover:bg-blue-500 shadow-md transition-all">
+                    <button type="submit" class="px-6 py-2.5 rounded-xl text-white font-bold bg-blue-600 hover:bg-blue-500 shadow-md transition-all">
                         Simpan Gudang
                     </button>
                 </div>
@@ -114,22 +123,29 @@
         async function fetchWarehouses() {
             const tbody = document.getElementById('warehousesTableBody');
             try {
-                const res = await axios.get('/api/warehouses');
-                const data = res.data?.data || [];
+                const res = await axios.get('/api/warehouses?per_page=100');
+                const raw = res.data?.data;
+                const data = Array.isArray(raw) ? raw : (raw?.data || []);
 
                 if (!data.length) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-400">Belum ada gudang terdaftar.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400">Belum ada gudang terdaftar.</td></tr>`;
                     return;
                 }
 
-                tbody.innerHTML = data.map(w => `
+                tbody.innerHTML = data.map((w, idx) => {
+                    const isActive = (w.is_active == 1 || w.is_active === true || String(w.is_active).toLowerCase() === 'true' || String(w.status).toLowerCase() === 'active');
+                    const badgeClass = isActive ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
+                    const badgeLabel = isActive ? 'Aktif' : 'Inaktif';
+
+                    return `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                        <td class="py-3.5 pl-6 font-mono font-bold text-blue-600 dark:text-blue-400">${w.code || '-'}</td>
+                        <td class="py-3.5 pl-6 font-bold text-slate-500">${idx + 1}</td>
+                        <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">${w.code || '-'}</td>
                         <td class="py-3.5 font-bold text-slate-800 dark:text-slate-100">${w.name}</td>
                         <td class="py-3.5 text-slate-600 dark:text-slate-400">${w.city || '-'}, ${w.address || ''}</td>
                         <td class="py-3.5 text-slate-600 dark:text-slate-300">${w.pic_name || '-'} (${w.phone || '-'})</td>
                         <td class="py-3.5 text-center">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">Aktif</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeClass}">${badgeLabel}</span>
                         </td>
                         <td class="py-3.5 pr-6 text-right">
                             <div class="inline-flex items-center gap-1.5">
@@ -142,10 +158,11 @@
                             </div>
                         </td>
                     </tr>
-                `).join('');
+                    `;
+                }).join('');
             } catch (err) {
                 console.error('Fetch warehouses error:', err);
-                tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-slate-400">Gagal memuat gudang.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-slate-400">Gagal memuat gudang.</td></tr>`;
             }
         }
 
@@ -153,11 +170,24 @@
             document.getElementById('whModalTitle').innerText = 'Tambah Gudang Baru';
             document.getElementById('warehouseForm').reset();
             document.getElementById('whId').value = '';
-            document.getElementById('warehouseModal').classList.remove('hidden');
+            document.getElementById('whStatus').value = '1';
+            if (window.setPickerValue) {
+                window.setPickerValue('whCityPicker', '', '');
+            } else {
+                const h = document.getElementById('hidden-whCityPicker');
+                const d = document.getElementById('display-whCityPicker');
+                if (h) h.value = '';
+                if (d) d.value = '';
+            }
+            const modal = document.getElementById('warehouseModal');
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
         }
 
         function closeWarehouseModal() {
-            document.getElementById('warehouseModal').classList.add('hidden');
+            const modal = document.getElementById('warehouseModal');
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
         }
 
         function editWarehouse(w) {
@@ -165,51 +195,86 @@
             document.getElementById('whId').value = w.id;
             document.getElementById('whCode').value = w.code || '';
             document.getElementById('whName').value = w.name || '';
-            document.getElementById('whCity').value = w.city || '';
+            const cityName = w.city || '';
+            if (window.setPickerValue) {
+                window.setPickerValue('whCityPicker', cityName, cityName);
+            } else {
+                const h = document.getElementById('hidden-whCityPicker');
+                const d = document.getElementById('display-whCityPicker');
+                if (h) h.value = cityName;
+                if (d) d.value = cityName;
+            }
             document.getElementById('whPic').value = w.pic_name || '';
             document.getElementById('whPhone').value = w.phone || '';
             document.getElementById('whPostal').value = w.postal_code || '';
             document.getElementById('whAddress').value = w.address || '';
-            document.getElementById('warehouseModal').classList.remove('hidden');
+            const isActive = (w.is_active == 1 || w.is_active === true || String(w.is_active).toLowerCase() === 'true' || String(w.status).toLowerCase() === 'active');
+            document.getElementById('whStatus').value = isActive ? '1' : '0';
+            const modal = document.getElementById('warehouseModal');
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
         }
 
         async function saveWarehouse(e) {
             e.preventDefault();
             const id = document.getElementById('whId').value;
+            const isAct = document.getElementById('whStatus').value === '1';
+            const cityVal = document.getElementById('hidden-whCityPicker')?.value || document.getElementById('display-whCityPicker')?.value || '';
+            if (!cityVal) {
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Silakan pilih Kota / Kabupaten' });
+                return;
+            }
             const payload = {
                 code: document.getElementById('whCode').value,
                 name: document.getElementById('whName').value,
-                city: document.getElementById('whCity').value,
+                city: cityVal,
                 pic_name: document.getElementById('whPic').value,
                 phone: document.getElementById('whPhone').value,
                 postal_code: document.getElementById('whPostal').value,
                 address: document.getElementById('whAddress').value,
+                is_active: isAct,
+                status: isAct ? 'Active' : 'Inactive',
             };
 
             try {
                 if (id) {
                     await axios.put(`/api/warehouses/${id}`, payload);
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Gudang berhasil diperbarui.', timer: 1500, showConfirmButton: false });
                 } else {
                     await axios.post('/api/warehouses', payload);
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Gudang baru berhasil disimpan.', timer: 1500, showConfirmButton: false });
                 }
                 closeWarehouseModal();
                 fetchWarehouses();
             } catch (err) {
-                alert('Gagal menyimpan gudang: ' + (err.response?.data?.message || err.message));
+                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menyimpan gudang: ' + (err.response?.data?.message || err.message) });
             }
         }
 
         async function deleteWarehouse(id) {
-            if (!confirm('Yakin ingin menghapus gudang ini?')) return;
+            const res = await Swal.fire({
+                title: 'Hapus Gudang?',
+                text: 'Yakin ingin menghapus gudang ini? Tindakan ini tidak dapat dibatalkan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6e7a89',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            });
+            if (!res.isConfirmed) return;
             try {
                 await axios.delete(`/api/warehouses/${id}`);
+                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Gudang berhasil dihapus.', timer: 1500, showConfirmButton: false });
                 fetchWarehouses();
             } catch (err) {
-                alert('Gagal menghapus gudang: ' + (err.response?.data?.message || err.message));
+                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menghapus gudang: ' + (err.response?.data?.message || err.message) });
             }
         }
 
-        document.addEventListener('DOMContentLoaded', fetchWarehouses);
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWarehouses();
+        });
     </script>
     @endpush
 </x-layout.app>

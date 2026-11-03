@@ -21,6 +21,11 @@ class CorporateProductController extends ProxyController
         return $this->forward($request, 'GET', '/api/corporate/products', $request->all());
     }
 
+    public function proxyCheckSku(Request $request)
+    {
+        return $this->forward($request, 'GET', '/api/corporate/products/check-sku', $request->all());
+    }
+
     public function proxyStore(Request $request)
     {
         return $this->forward($request, 'POST', '/api/corporate/products', $request->all());
@@ -49,6 +54,21 @@ class CorporateProductController extends ProxyController
     public function proxyStoreCategory(Request $request)
     {
         return $this->forward($request, 'POST', '/api/corporate/product-categories', $request->all());
+    }
+
+    public function proxyShowCategory(Request $request, $id)
+    {
+        return $this->forward($request, 'GET', "/api/corporate/product-categories/{$id}");
+    }
+
+    public function proxyUpdateCategory(Request $request, $id)
+    {
+        return $this->forward($request, 'PUT', "/api/corporate/product-categories/{$id}", $request->all());
+    }
+
+    public function proxyDestroyCategory(Request $request, $id)
+    {
+        return $this->forward($request, 'DELETE', "/api/corporate/product-categories/{$id}");
     }
 
     public function proxyUoms(Request $request)

@@ -26,9 +26,24 @@ class DistributorInvoiceController extends ProxyController
         return $this->forward($request, 'POST', '/api/corporate/finance/distributor-invoices', $request->all());
     }
 
+    public function store(Request $request)
+    {
+        return $this->proxyStore($request);
+    }
+
     public function proxyShow(Request $request, $id)
     {
         return $this->forward($request, 'GET', "/api/corporate/finance/distributor-invoices/{$id}");
+    }
+
+    public function proxyUpdateStatus(Request $request, $id)
+    {
+        return $this->forward($request, 'PUT', "/api/corporate/finance/distributor-invoices/{$id}/status", $request->all());
+    }
+
+    public function updateStatus(Request $request, $id)
+    {
+        return $this->proxyUpdateStatus($request, $id);
     }
 
     public function proxyFormDependencies(Request $request)
@@ -39,5 +54,15 @@ class DistributorInvoiceController extends ProxyController
     public function proxyCorporateInvoices(Request $request)
     {
         return $this->forward($request, 'GET', '/api/corporate/invoices', $request->all());
+    }
+
+    public function proxyCorporateInvoiceShow(Request $request, $id)
+    {
+        return $this->forward($request, 'GET', "/api/corporate/invoices/{$id}");
+    }
+
+    public function proxyUploadPaymentProof(Request $request, $id)
+    {
+        return $this->forwardMultipart($request, "/api/corporate/invoices/{$id}/payment-proof");
     }
 }

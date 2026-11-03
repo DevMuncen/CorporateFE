@@ -9,11 +9,11 @@
     <main>
         <div id="main-wrapper" class="flex relative">
             <!-- Sidebar -->
-            <aside id="application-sidebar-brand" class="hs-overlay hs-overlay-open:translate-x-0 -translate-x-full xl:rtl:-translate-x-0 rtl:translate-x-full left-0 rtl:left-auto rtl:right-0 transform xl:translate-x-0 xl:end-auto xl:bottom-0 fixed top-0 left-0 transition-all duration-300 h-screen z-50 flex-shrink-0 flex flex-col overflow-hidden border-r rtl:border-l rtl:border-r-0 w-[270px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-lg xl:shadow-none">
+            <aside id="application-sidebar-brand" class="hs-overlay [--auto-close:xl] hs-overlay-open:translate-x-0 -translate-x-full xl:rtl:-translate-x-0 rtl:translate-x-full left-0 rtl:left-auto rtl:right-0 transform xl:translate-x-0 xl:end-auto xl:bottom-0 fixed top-0 left-0 transition-all duration-300 h-screen z-50 flex-shrink-0 flex flex-col overflow-hidden border-r rtl:border-l rtl:border-r-0 w-[270px] border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 shadow-lg xl:shadow-none" data-hs-overlay-options='{"autoClose": "xl"}'>
                 <x-sidebar />
             </aside>
             
-            <div class="page-wrapper w-full xl:ml-[270px] xl:w-[calc(100%-270px)] min-h-screen flex flex-col relative" role="main">
+            <div class="page-wrapper w-full xl:ml-[270px] xl:w-[calc(100%-270px)] min-h-screen flex flex-col relative transition-all duration-300" role="main">
                 <!-- Header -->
                 <header class="sticky top-0 inset-x-0 z-30 flex flex-wrap md:justify-start md:flex-nowrap text-sm bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60">
                     <div class="with-vertical w-full">

@@ -1,4 +1,4 @@
-<div class="brand-logo flex items-center justify-start w-full py-1">
+<div class="brand-logo flex items-center justify-start py-1">
   <a href="/dashboard" class="logo-img flex items-center gap-2.5 overflow-hidden transition-all hover:opacity-90">
     <img src="<?php echo e(asset('assets/images/logos/corporate-logo-b.png')); ?>" alt="CORPORATE" class="h-9 w-9 shrink-0 object-contain dark:hidden" width="36" height="36" style="width: 36px; height: 36px; max-width: 36px; max-height: 36px; object-fit: contain;" onerror="this.onerror=null; this.src='<?php echo e(asset('assets/images/logos/logoIcon.svg')); ?>';" />
     <img src="<?php echo e(asset('assets/images/logos/corporate-logo-w.png')); ?>" alt="CORPORATE" class="h-9 w-9 shrink-0 object-contain hidden dark:block" width="36" height="36" style="width: 36px; height: 36px; max-width: 36px; max-height: 36px; object-fit: contain;" onerror="this.onerror=null; this.src='<?php echo e(asset('assets/images/logos/logoIcon.svg')); ?>';" />

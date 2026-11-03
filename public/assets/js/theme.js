@@ -1,10 +1,12 @@
 //add Shadow to header on scroll
 document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("scroll", function () {
+        const topHeader = document.querySelector(".top-header") || document.querySelector("header");
+        if (!topHeader) return;
         if (document.body.scrollTop > 60 || document.documentElement.scrollTop > 60) {
-            document.querySelector(".top-header").classList.add("shadow-sm");  
+            topHeader.classList.add("shadow-sm");  
         } else {
-            document.querySelector(".top-header").classList.remove("shadow-sm");
+            topHeader.classList.remove("shadow-sm");
         }
-    })
+    });
 });
