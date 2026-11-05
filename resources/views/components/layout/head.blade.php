@@ -36,7 +36,7 @@
 <!-- Vite Config -->
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-<!-- Universal Backdrop Neutralizer (Prevents any Preline backdrop from blocking picker clicks) -->
+<!-- Universal Backdrop Neutralizer & Desktop Sidebar Guarantee -->
 <style>
 .hs-overlay-backdrop,
 div[data-hs-overlay-backdrop-template],
@@ -51,5 +51,56 @@ div[data-hs-overlay-backdrop-template],
 }
 body.has-modal-open {
     overflow: hidden;
+}
+
+/* Permanent Desktop Sidebar Guarantee - Prevents any accidental display:none or empty gap */
+@media (min-width: 1280px) {
+    #application-sidebar-brand {
+        display: flex !important;
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 270px !important;
+        height: 100vh !important;
+        z-index: 40 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    [dir="rtl"] #application-sidebar-brand {
+        left: auto !important;
+        right: 0 !important;
+    }
+    #application-sidebar-brand.desktop-sidebar-collapsed {
+        transform: translateX(-100%) !important;
+    }
+    [dir="rtl"] #application-sidebar-brand.desktop-sidebar-collapsed {
+        transform: translateX(100%) !important;
+    }
+    #application-sidebar-brand:not(.desktop-sidebar-collapsed) {
+        transform: translateX(0) !important;
+    }
+    
+    .page-wrapper {
+        transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    #application-sidebar-brand.desktop-sidebar-collapsed ~ .page-wrapper {
+        margin-left: 0px !important;
+        width: 100% !important;
+    }
+    [dir="rtl"] #application-sidebar-brand.desktop-sidebar-collapsed ~ .page-wrapper {
+        margin-right: 0px !important;
+        width: 100% !important;
+    }
+    #application-sidebar-brand:not(.desktop-sidebar-collapsed) ~ .page-wrapper {
+        margin-left: 270px !important;
+        width: calc(100% - 270px) !important;
+    }
+    [dir="rtl"] #application-sidebar-brand:not(.desktop-sidebar-collapsed) ~ .page-wrapper {
+        margin-right: 270px !important;
+        margin-left: 0 !important;
+        width: calc(100% - 270px) !important;
+    }
 }
 </style>

@@ -76,72 +76,23 @@ export class ModalPicker {
     }
 
     getFallbackData() {
-        if (this.url.includes('warehouse')) {
-            return [
-                { id: 1, code: 'WH-QA-TAMBUN', name: 'Gudang QA Tambun Pusat', city: 'Kota Bekasi', pic_name: 'Bpk. Agus Santoso', phone: '081234567891', address: 'Jl. Sultan Hasanudin No. 88, Tambun Selatan' },
-                { id: 2, code: 'GW-CMP-001', name: 'Gudang Pusat Korporasi Merah Putih', city: 'Kota Bekasi', pic_name: 'Bpk. Herman', phone: '081298765432', address: 'Kawasan Industri MM2100' },
-                { id: 3, code: 'WH-BDG-002', name: 'Gudang Distribusi Bandung Barat', city: 'Kota Bandung', pic_name: 'Ibu Siti Rahma', phone: '081345678901', address: 'Jl. Soekarno Hatta No. 450, Bandung' },
-                { id: 4, code: 'WH-SBY-003', name: 'Hub Logistik Surabaya Rungkut', city: 'Kota Surabaya', pic_name: 'Bpk. Bambang', phone: '081233445566', address: 'Kawasan SIER Rungkut Industri, Surabaya' }
-            ];
-        }
-        if (this.url.includes('kota') || this.url.includes('wilayah') || this.url.includes('cities')) {
-            return [
-                { id: '3273', code: '3273', name: 'KOTA BANDUNG', city: 'Jawa Barat' },
-                { id: '3275', code: '3275', name: 'KOTA BEKASI', city: 'Jawa Barat' },
-                { id: '3171', code: '3171', name: 'KOTA JAKARTA PUSAT', city: 'DKI Jakarta' },
-                { id: '3578', code: '3578', name: 'KOTA SURABAYA', city: 'Jawa Timur' },
-                { id: '3674', code: '3674', name: 'KOTA TANGERANG SELATAN', city: 'Banten' },
-                { id: '3204', code: '3204', name: 'KABUPATEN BANDUNG', city: 'Jawa Barat' },
-                { id: '3216', code: '3216', name: 'KABUPATEN BEKASI', city: 'Jawa Barat' },
-                { id: '3201', code: '3201', name: 'KABUPATEN BOGOR', city: 'Jawa Barat' },
-                { id: '3271', code: '3271', name: 'KOTA BOGOR', city: 'Jawa Barat' },
-                { id: '3276', code: '3276', name: 'KOTA DEPOK', city: 'Jawa Barat' },
-                { id: '3173', code: '3173', name: 'KOTA JAKARTA BARAT', city: 'DKI Jakarta' },
-                { id: '3174', code: '3174', name: 'KOTA JAKARTA SELATAN', city: 'DKI Jakarta' },
-                { id: '3175', code: '3175', name: 'KOTA JAKARTA TIMUR', city: 'DKI Jakarta' },
-                { id: '3172', code: '3172', name: 'KOTA JAKARTA UTARA', city: 'DKI Jakarta' }
-            ];
-        }
-        if (this.url.includes('product')) {
-            return [
-                { id: 1, code: 'SKU-BRG-001', sku: 'SKU-BRG-001', name: 'Beras Premium 5kg', weight: 5, base_price: 75000, uom: 'Sak' },
-                { id: 2, code: 'SKU-BRG-002', sku: 'SKU-BRG-002', name: 'Minyak Goreng 2L', weight: 2, base_price: 36000, uom: 'Pouch' },
-                { id: 3, code: 'SKU-BRG-003', sku: 'SKU-BRG-003', name: 'Gula Pasir 1kg', weight: 1, base_price: 18000, uom: 'Bungkus' },
-                { id: 4, code: 'SKU-BRG-004', sku: 'SKU-BRG-004', name: 'Tepung Terigu Segitiga 1kg', weight: 1, base_price: 14000, uom: 'Bungkus' },
-                { id: 5, code: 'SKU-BRG-005', sku: 'SKU-BRG-005', name: 'Kopi Bubuk Spesial 250g', weight: 0.25, base_price: 25000, uom: 'Pcs' }
-            ];
-        }
-        if (this.url.includes('fleet')) {
-            return [
-                { id: 1, code: 'FLT-CDE', name: 'CDE Box (Engkel)', capacity: 2000 },
-                { id: 2, code: 'FLT-CDD', name: 'CDD Box (Double)', capacity: 4000 },
-                { id: 3, code: 'FLT-FUSO', name: 'Fuso Heavy Box', capacity: 8000 },
-                { id: 4, code: 'FLT-TRONTON', name: 'Tronton Wingbox', capacity: 15000 }
-            ];
-        }
-        if (this.url.includes('logistic') || this.url.includes('vendor')) {
-            return [
-                { id: 1, code: 'LOG-CMP-001', name: 'PT Logistik Merah Putih Sentosa', city: 'Jakarta' },
-                { id: 2, code: 'LOG-KGP-002', name: 'PT Kencana Graha Perkasa Logistik', city: 'Bandung' }
-            ];
-        }
-        if (this.url.includes('corporate') || this.url.includes('customer') || this.url.includes('distributor')) {
-            return [
-                { id: 1, code: 'CORP-CMP', name: 'PT Cahaya Merah Putih', city: 'Jakarta Pusat' },
-                { id: 2, code: 'DIST-BDG', name: 'Toko Mitra Grosir Bandung', city: 'Kota Bandung' }
-            ];
-        }
         return [];
     }
 
     async loadData() {
         if (!this.tbody) return;
         
-        // Immediate pre-population so picker modal is NEVER empty or blocked by loading
-        const initialData = this.getFallbackData();
-        if (this.tbody.children.length === 0 && initialData.length > 0) {
-            this.renderTable(initialData);
-        }
+        // Show clean loading spinner state instead of dummy standby data
+        this.tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="px-6 py-8 text-center text-xs text-slate-400 dark:text-slate-500">
+                    <div class="inline-flex items-center gap-2">
+                        <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span>Memuat data...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
 
         try {
             const separator = this.url.includes('?') ? '&' : '?';
@@ -149,7 +100,7 @@ export class ModalPicker {
 
             let payload = null;
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1500);
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
             try {
                 if (window.axios) {
@@ -163,7 +114,7 @@ export class ModalPicker {
                     payload = await res.json();
                 }
             } catch (networkErr) {
-                // Silently fallback on timeout or error
+                console.warn('Modal picker network fetch warning:', networkErr);
             } finally {
                 clearTimeout(timeoutId);
             }
@@ -172,21 +123,12 @@ export class ModalPicker {
             let items = Array.isArray(payload) ? payload : (Array.isArray(payload?.data) ? payload.data : (payload?.data?.data || []));
             let meta = payload?.meta || payload?.pagination || (payload?.data && !Array.isArray(payload.data) ? payload.data : null);
 
-            // Filter by search query if fallback or client filtering needed
-            if ((!items || items.length === 0) && this.searchQuery) {
-                const q = this.searchQuery.toLowerCase().trim();
-                const fallbacks = this.getFallbackData();
-                items = fallbacks.filter(it => (it.name || '').toLowerCase().includes(q) || (it.code || '').toLowerCase().includes(q));
-            } else if (!items || items.length === 0) {
-                items = this.getFallbackData();
-            }
-
-            this.renderTable(items);
+            this.renderTable(items || []);
             this.renderPagination(meta);
         } catch (error) {
-            const fallback = this.getFallbackData();
-            if (fallback.length > 0) {
-                this.renderTable(fallback);
+            console.error('Modal picker loadData error:', error);
+            if (this.tbody) {
+                this.tbody.innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-xs text-rose-500 dark:text-rose-400">Gagal memuat data. Silakan coba lagi.</td></tr>';
             }
         }
     }
@@ -202,7 +144,10 @@ export class ModalPicker {
         items.forEach((item, index) => {
             const code = item.code || item.reference_number || item.sku || item.id || `#${index + 1}`;
             const name = item.name || item.title || item.description || '-';
-            const extra = item.city || item.province?.name || (item.weight ? `${item.weight} kg` : '') || '';
+            const typeBadge = item.type === 'distributor' 
+                ? '<span class="inline-flex items-center gap-0.5 ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">Mitra Distribusi</span>'
+                : (item.type === 'customer' ? '<span class="inline-flex items-center gap-0.5 ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">Pelanggan B2B</span>' : '');
+            const extra = item.city_name || item.city || item.province?.name || (item.weight ? `${item.weight} kg` : '') || (item.phone ? `Telp: ${item.phone}` : '') || '';
 
             const tr = document.createElement('tr');
             tr.className = 'cursor-pointer hover:bg-blue-50/70 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-100 dark:border-slate-700/60';
@@ -211,7 +156,7 @@ export class ModalPicker {
                     <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700">${code}</span>
                 </td>
                 <td class="px-4 py-3 text-xs text-slate-800 dark:text-slate-200">
-                    <div class="font-bold">${name}</div>
+                    <div class="font-bold flex items-center flex-wrap gap-1">${name} ${typeBadge}</div>
                     ${extra ? `<div class="text-[11px] text-slate-400 mt-0.5">${extra}</div>` : ''}
                 </td>
                 <td class="px-4 py-3 whitespace-nowrap text-end text-xs font-medium">
@@ -457,6 +402,7 @@ window.setPickerValue = async function(pickerId, value, displayText = null, extr
 };
 
 ModalPicker.setValue = window.setPickerValue;
+window.setModalPickerValue = window.setPickerValue;
 
 export function initModalPickers() {
     document.querySelectorAll('[data-modal-picker]').forEach(el => {

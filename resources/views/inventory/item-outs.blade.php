@@ -216,7 +216,7 @@
                             <td class="py-3.5 font-mono text-slate-600 dark:text-slate-400">${o.reference_number || o.request_order?.order_number || o.waybill?.waybill_number || '-'}</td>
                             <td class="py-3.5 text-slate-500">${o.issue_date || (o.created_at ? new Date(o.created_at).toLocaleDateString('id-ID') : '-')}</td>
                             <td class="py-3.5 font-bold text-slate-800 dark:text-slate-200">${o.warehouse?.name || 'Gudang Pusat'}</td>
-                            <td class="py-3.5 text-slate-600 dark:text-slate-300">${o.customer?.name || '-'}</td>
+                            <td class="py-3.5 text-slate-600 dark:text-slate-300">${o.recipient_name || o.customer?.name || o.waybill?.request_order?.recipient_name || o.waybill?.request_order?.customer?.name || '-'}</td>
                             <td class="py-3.5 text-right font-black text-amber-600">${totalQty.toLocaleString('id-ID')} unit</td>
                             <td class="py-3.5 pr-6 text-right">
                                 <button type="button" onclick="showItemOutDetail(${idx})" class="px-2.5 py-1 rounded-lg text-blue-600 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 font-bold transition-all">
@@ -356,7 +356,7 @@
                 <div class="grid grid-cols-2 gap-2 pb-2 border-b border-slate-100 dark:border-slate-700 text-[11px]">
                     <div><span class="text-slate-400">Gudang Asal:</span> <strong class="text-slate-700 dark:text-slate-200">${item.warehouse?.name || '-'}</strong></div>
                     <div><span class="text-slate-400">Tanggal:</span> <strong class="text-slate-700 dark:text-slate-200">${item.issue_date || '-'}</strong></div>
-                    <div><span class="text-slate-400">Pelanggan:</span> <strong class="text-slate-700 dark:text-slate-200">${item.customer?.name || '-'}</strong></div>
+                    <div><span class="text-slate-400">Pelanggan:</span> <strong class="text-slate-700 dark:text-slate-200">${item.recipient_name || item.customer?.name || item.waybill?.request_order?.recipient_name || item.waybill?.request_order?.customer?.name || '-'}</strong></div>
                     <div><span class="text-slate-400">Ref. Dokumen:</span> <strong class="text-slate-700 dark:text-slate-200 font-mono">${item.reference_number || '-'}</strong></div>
                 </div>
                 ${item.action_notes ? `<div class="text-[11px] text-slate-500 bg-slate-50 dark:bg-slate-900 p-2 rounded-lg italic">${item.action_notes}</div>` : ''}

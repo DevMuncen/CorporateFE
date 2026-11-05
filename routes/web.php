@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\CorporateCodeController;
 use App\Http\Controllers\CorporateCustomerController;
 use App\Http\Controllers\CorporateDistributorController;
 use App\Http\Controllers\CorporateProductController;
@@ -42,7 +43,7 @@ Route::middleware(['bff.auth'])->group(function () {
     Route::get('/warehouses', [CorporateWarehouseController::class, 'index'])->name('warehouses.index');
     Route::get('/customers', [CorporateCustomerController::class, 'index'])->name('customers.index');
     Route::get('/vendors', [CorporateVendorController::class, 'index'])->name('vendors.index');
-    Route::get('/distributors', [CorporateDistributorController::class, 'index'])->name('distributors.index');
+    Route::get('/distributors', fn() => redirect()->route('customers.index'));
 
     // Order Management & Request Order Wizard
     Route::get('/request-orders', [RequestOrderController::class, 'index'])->name('request-orders.index');
@@ -77,6 +78,10 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::get('/users/{id}', [CorporateUserController::class, 'proxyShow']);
         Route::put('/users/{id}', [CorporateUserController::class, 'proxyUpdate']);
         Route::delete('/users/{id}', [CorporateUserController::class, 'proxyDestroy']);
+
+        // Code Uniqueness & Suggestion
+        Route::match(['get', 'post'], '/code/check', [CorporateCodeController::class, 'proxyCheck']);
+        Route::get('/code/suggest', [CorporateCodeController::class, 'proxySuggest']);
 
         // Products & Taxonomy
         Route::get('/products', [CorporateProductController::class, 'proxyList']);
@@ -120,6 +125,8 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::post('/request-orders', [RequestOrderController::class, 'proxyStore']);
         Route::get('/request-orders/{id}', [RequestOrderController::class, 'proxyShow']);
         Route::put('/request-orders/{id}', [RequestOrderController::class, 'proxyUpdate']);
+        Route::post('/request-orders/{id}/submit', [RequestOrderController::class, 'proxySubmit']);
+        Route::post('/request-orders/{id}/withdraw', [RequestOrderController::class, 'proxyWithdraw']);
         Route::delete('/request-orders/{id}', [RequestOrderController::class, 'proxyDestroy']);
         Route::post('/request-orders/inquire-routes', [RequestOrderController::class, 'proxyInquireRoutes']);
         Route::post('/request-orders/calculate-pricing', [RequestOrderController::class, 'proxyCalculatePricing']);
@@ -165,7 +172,7 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::post('/finance/bank-accounts', [BankAccountController::class, 'proxyStore']);
         Route::get('/finance/bank-accounts/coa-options', [BankAccountController::class, 'proxyCoaOptions']);
         Route::get('/finance/bank-accounts/{id}', [BankAccountController::class, 'proxyShow']);
-        Route::put('/finance/bank-accounts/{id}', [BankAccountController::class, 'proxyUpdate']);
+        Route::match(['put', 'patch', 'post'], '/finance/bank-accounts/{id}', [BankAccountController::class, 'proxyUpdate']);
         Route::delete('/finance/bank-accounts/{id}', [BankAccountController::class, 'proxyDestroy']);
         Route::post('/finance/bank-accounts/{id}/set-default', [BankAccountController::class, 'proxySetDefault']);
 
@@ -173,7 +180,7 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::post('/bank-accounts', [BankAccountController::class, 'proxyStore']);
         Route::get('/bank-accounts/coa-options', [BankAccountController::class, 'proxyCoaOptions']);
         Route::get('/bank-accounts/{id}', [BankAccountController::class, 'proxyShow']);
-        Route::put('/bank-accounts/{id}', [BankAccountController::class, 'proxyUpdate']);
+        Route::match(['put', 'patch', 'post'], '/bank-accounts/{id}', [BankAccountController::class, 'proxyUpdate']);
         Route::delete('/bank-accounts/{id}', [BankAccountController::class, 'proxyDestroy']);
         Route::post('/bank-accounts/{id}/set-default', [BankAccountController::class, 'proxySetDefault']);
 
@@ -254,6 +261,8 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::post('/request-orders', [RequestOrderController::class, 'proxyStore']);
         Route::get('/request-orders/{id}', [RequestOrderController::class, 'proxyShow']);
         Route::put('/request-orders/{id}', [RequestOrderController::class, 'proxyUpdate']);
+        Route::post('/request-orders/{id}/submit', [RequestOrderController::class, 'proxySubmit']);
+        Route::post('/request-orders/{id}/withdraw', [RequestOrderController::class, 'proxyWithdraw']);
         Route::delete('/request-orders/{id}', [RequestOrderController::class, 'proxyDestroy']);
         Route::post('/request-orders/inquire-routes', [RequestOrderController::class, 'proxyInquireRoutes']);
         Route::post('/request-orders/calculate-pricing', [RequestOrderController::class, 'proxyCalculatePricing']);

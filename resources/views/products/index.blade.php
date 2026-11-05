@@ -51,15 +51,16 @@
                             <th class="py-3.5">SKU / Kode</th>
                             <th class="py-3.5">Nama Produk</th>
                             <th class="py-3.5">Kategori</th>
+                            <th class="py-3.5">Muatan</th>
                             <th class="py-3.5 text-right">Harga Dasar</th>
-                            <th class="py-3.5 text-right">Berat (kg)</th>
+                            <th class="py-3.5 text-right">Berat / Satuan</th>
                             <th class="py-3.5 text-center">Status</th>
                             <th class="py-3.5 pr-6 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         <tr>
-                            <td colspan="8" class="py-12 text-center text-slate-400">
+                            <td colspan="9" class="py-12 text-center text-slate-400">
                                 <div class="inline-flex items-center gap-2">
                                     <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                                     <span>Memuat katalog produk...</span>
@@ -94,20 +95,31 @@
                     <input type="hidden" id="prodId" />
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kode SKU *</label>
-                            <input type="text" id="prodSku" required placeholder="SKU-BRG-001" onblur="checkSkuUniqueness()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block font-bold text-slate-600 dark:text-slate-300">Kode SKU *</label>
+                                <button type="button" onclick="suggestProductCode()" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer">
+                                    <iconify-icon icon="solar:magic-stick-3-linear"></iconify-icon> Saran Kode
+                                </button>
+                            </div>
+                            <input type="text" id="prodSku" required placeholder="SKU-BRG-001" onblur="checkSkuUniqueness()" oninput="debounceCheckSku()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
                             <div id="prodSkuFeedback" class="text-xs mt-1 hidden"></div>
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kategori (Opsional)</label>
-                            <select id="prodCategory" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
-                                <option value="">-- Tanpa Kategori / Umum --</option>
-                            </select>
+                            <x-modal-picker 
+                                id="prodCategoryPicker" 
+                                name="category_id" 
+                                label="Kategori Produk" 
+                                url="/api/product-categories" 
+                                placeholder="Pilih Kategori Produk..." 
+                            />
                         </div>
                         <div class="lg:col-span-2">
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Produk *</label>
                             <input type="text" id="prodName" required placeholder="Contoh: Beras Premium 5kg" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Harga Dasar (Rp) *</label>
                             <input type="number" id="prodPrice" required min="0" placeholder="75000" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
@@ -116,7 +128,32 @@
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Berat Satuan (kg) *</label>
                             <input type="number" step="0.01" id="prodWeight" required min="0" placeholder="5.0" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
                         </div>
-                        <div class="lg:col-span-2">
+                        <div>
+                            <x-modal-picker 
+                                id="prodUomPicker" 
+                                name="uom_id" 
+                                label="Satuan (UOM)" 
+                                url="/api/uoms" 
+                                placeholder="Pilih Satuan UOM..." 
+                            />
+                        </div>
+                        <div>
+                            <x-modal-picker 
+                                id="prodCargoPicker" 
+                                name="cargo_type_id" 
+                                label="Jenis Muatan (Cargo Type)" 
+                                url="/api/cargo-types" 
+                                placeholder="Pilih Jenis Muatan..." 
+                            />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                        <div class="lg:col-span-3">
+                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Keterangan / Deskripsi Produk</label>
+                            <textarea id="prodDescription" rows="2" placeholder="Keterangan spesifikasi produk..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl"></textarea>
+                        </div>
+                        <div>
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Status Produk *</label>
                             <select id="prodStatus" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl">
                                 <option value="1">Aktif</option>
@@ -194,14 +231,22 @@
                     const badgeClass = isActive ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300';
                     const badgeLabel = isActive ? 'Aktif' : 'Nonaktif';
 
+                    const categoryName = p.category?.name || p.category_name || 'Umum';
+                    const cargoName = p.cargo_type ? (p.cargo_type.code ? `${p.cargo_type.code} - ${p.cargo_type.name}` : p.cargo_type.name) : '-';
+                    const uomName = (typeof p.uom === 'object' && p.uom !== null)
+                        ? (p.uom.code || p.uom.name || '-')
+                        : (p.uom || p.unit_of_measure?.code || p.unit_of_measure?.name || '-');
+                    const weightText = `${p.weight_kg || p.weight || 0} kg (${uomName})`;
+
                     return `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                         <td class="py-3.5 pl-6 font-bold text-slate-500">${idx + 1}</td>
                         <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">${p.sku || p.code || '-'}</td>
                         <td class="py-3.5 font-bold text-slate-800 dark:text-slate-100">${p.name}</td>
-                        <td class="py-3.5 text-slate-500">${p.category?.name || 'Umum'}</td>
-                        <td class="py-3.5 text-right font-semibold text-slate-800 dark:text-slate-200">Rp ${(p.base_price || p.price || 0).toLocaleString('id-ID')}</td>
-                        <td class="py-3.5 text-right text-slate-600 dark:text-slate-300">${p.weight || 0} kg</td>
+                        <td class="py-3.5 text-slate-500">${categoryName}</td>
+                        <td class="py-3.5 text-slate-500">${cargoName}</td>
+                        <td class="py-3.5 text-right font-semibold text-slate-800 dark:text-slate-200">Rp ${(p.base_price || p.price || p.default_price || 0).toLocaleString('id-ID')}</td>
+                        <td class="py-3.5 text-right text-slate-600 dark:text-slate-300 font-medium">${weightText}</td>
                         <td class="py-3.5 text-center">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeClass}">
                                 ${badgeLabel}
@@ -234,6 +279,30 @@
             const cbm = (l > 0 && w > 0 && h > 0) ? (l * w * h) / 1000000 : 0;
             const display = document.getElementById('prodVolumetricDisplay');
             if (display) display.innerText = `${volumetric.toFixed(2)} kgv (${cbm.toFixed(3)} m³)`;
+        }
+
+        let skuDebounceTimer = null;
+        function debounceCheckSku() {
+            clearTimeout(skuDebounceTimer);
+            skuDebounceTimer = setTimeout(() => {
+                checkSkuUniqueness();
+            }, 300);
+        }
+
+        async function suggestProductCode() {
+            try {
+                const res = await axios.get('/api/internal/corporate/code/suggest?type=product');
+                const suggested = res.data?.data?.suggested_code;
+                if (suggested) {
+                    const skuInput = document.getElementById('prodSku');
+                    if (skuInput) {
+                        skuInput.value = suggested;
+                        checkSkuUniqueness();
+                    }
+                }
+            } catch (err) {
+                console.error('Suggest SKU error:', err);
+            }
         }
 
         async function checkSkuUniqueness() {
@@ -292,6 +361,15 @@
                 feedback.innerText = '';
             }
 
+            if (window.setPickerValue) {
+                window.setPickerValue('prodCategoryPicker', '', '');
+                window.setPickerValue('prodCargoPicker', '', '');
+                window.setPickerValue('prodUomPicker', '', '');
+            }
+            if (document.getElementById('prodDescription')) {
+                document.getElementById('prodDescription').value = '';
+            }
+
             calcVolumetric();
             const modal = document.getElementById('productModal');
             modal.style.display = 'flex';
@@ -309,12 +387,14 @@
             document.getElementById('prodId').value = p.id;
             document.getElementById('prodSku').value = p.sku || p.code || '';
             document.getElementById('prodName').value = p.name || '';
-            document.getElementById('prodCategory').value = p.category_id || '';
-            document.getElementById('prodPrice').value = p.base_price || p.price || 0;
+            document.getElementById('prodPrice').value = p.base_price || p.price || p.default_price || 0;
             document.getElementById('prodWeight').value = p.weight || p.weight_kg || 0;
             document.getElementById('prodLength').value = p.length ?? (p.length_cm ?? '');
             document.getElementById('prodWidth').value = p.width ?? (p.width_cm ?? '');
             document.getElementById('prodHeight').value = p.height ?? (p.height_cm ?? '');
+            if (document.getElementById('prodDescription')) {
+                document.getElementById('prodDescription').value = p.description || '';
+            }
             
             const skuInput = document.getElementById('prodSku');
             skuInput?.classList.remove('border-red-500', 'border-emerald-500');
@@ -322,6 +402,18 @@
             if (feedback) {
                 feedback.className = 'text-xs mt-1 hidden';
                 feedback.innerText = '';
+            }
+
+            if (window.setPickerValue) {
+                const catLabel = p.category ? `${p.category.code ? p.category.code + ' - ' : ''}${p.category.name}` : (p.category_name || '');
+                window.setPickerValue('prodCategoryPicker', p.category_id || '', catLabel);
+
+                const cargoLabel = p.cargo_type ? `${p.cargo_type.code ? p.cargo_type.code + ' - ' : ''}${p.cargo_type.name}` : (p.cargo_type_name || '');
+                window.setPickerValue('prodCargoPicker', p.cargo_type_id || '', cargoLabel);
+
+                const uomId = p.uom_id || p.unit_of_measure?.id || '';
+                const uomLabel = p.unit_of_measure ? `${p.unit_of_measure.code} - ${p.unit_of_measure.name}` : (typeof p.uom === 'string' ? p.uom : '');
+                window.setPickerValue('prodUomPicker', uomId || (typeof p.uom === 'string' ? p.uom : '') || '', uomLabel);
             }
 
             calcVolumetric();
@@ -351,7 +443,18 @@
                 return;
             }
 
-            const categoryVal = document.getElementById('prodCategory').value;
+            const categoryId = document.getElementById('hidden-prodCategoryPicker')?.value || null;
+            const cargoTypeId = document.getElementById('hidden-prodCargoPicker')?.value || null;
+            const uomHidden = document.getElementById('hidden-prodUomPicker');
+            const uomId = uomHidden?.value || null;
+            let uomCode = null;
+            if (uomHidden && uomHidden.dataset.item) {
+                try {
+                    const itemObj = JSON.parse(uomHidden.dataset.item);
+                    uomCode = itemObj.code || itemObj.name || null;
+                } catch(e) {}
+            }
+
             const isAct = document.getElementById('prodStatus').value === '1';
             const l = parseFloat(document.getElementById('prodLength').value || 0);
             const w = parseFloat(document.getElementById('prodWidth').value || 0);
@@ -362,8 +465,13 @@
                 sku: skuVal,
                 code: skuVal,
                 name: document.getElementById('prodName').value,
-                category_id: categoryVal ? categoryVal : null,
+                category_id: categoryId ? parseInt(categoryId) : null,
+                cargo_type_id: cargoTypeId ? parseInt(cargoTypeId) : null,
+                uom_id: uomId ? parseInt(uomId) : null,
+                uom: uomCode,
                 base_price: parseFloat(document.getElementById('prodPrice').value),
+                price: parseFloat(document.getElementById('prodPrice').value),
+                default_price: parseFloat(document.getElementById('prodPrice').value),
                 weight: parseFloat(document.getElementById('prodWeight').value),
                 weight_kg: parseFloat(document.getElementById('prodWeight').value),
                 length: l,
@@ -374,6 +482,7 @@
                 height_cm: h,
                 volumetric_weight: vol,
                 volumetric_weight_kg: vol,
+                description: document.getElementById('prodDescription')?.value || '',
                 is_active: isAct,
                 status: isAct ? 'Active' : 'Inactive',
             };
@@ -421,15 +530,9 @@
                 const raw = res.data?.data;
                 const categories = Array.isArray(raw) ? raw : (raw?.data || []);
                 const filterSelect = document.getElementById('categoryFilter');
-                const modalSelect = document.getElementById('prodCategory');
 
                 if (filterSelect) {
                     filterSelect.innerHTML = '<option value="">Semua Kategori</option>' +
-                        categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-                }
-
-                if (modalSelect) {
-                    modalSelect.innerHTML = '<option value="">-- Tanpa Kategori / Umum --</option>' +
                         categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
                 }
             } catch (err) {

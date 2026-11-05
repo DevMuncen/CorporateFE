@@ -6,6 +6,16 @@
   <nav class="w-full flex flex-col">
     <ul id="sidebarnav" class="space-y-4">
       
+      @php
+        $role = session('user_role');
+        $isAdmin = ($role === 'corporate_admin' || !session()->has('user_role'));
+        $canCatalog = $isAdmin || in_array($role, ['corporate_inventory', 'corporate_operations', 'corporate_user']);
+        $canOperations = $isAdmin || in_array($role, ['corporate_operations', 'corporate_user']);
+        $canInventory = $isAdmin || in_array($role, ['corporate_inventory', 'corporate_user']);
+        $canFinance = $isAdmin || in_array($role, ['corporate_finance']);
+        $canUsers = $isAdmin;
+      @endphp
+
       <!-- Section 1: Governance & Analytics -->
       <div>
         <div class="caption text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 px-3">
@@ -25,6 +35,7 @@
       </div>
 
       <!-- Section 2: Catalog & Master Data -->
+      @if($canCatalog)
       <div>
         <button type="button" 
           onclick="const el = document.getElementById('menu-catalog'); el.classList.toggle('hidden'); this.querySelector('.arrow-icon').classList.toggle('rotate-180');" 
@@ -64,7 +75,7 @@
             <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('customers*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/customers">
               <div class="flex items-center gap-3">
                 <iconify-icon icon="solar:users-group-rounded-bold-duotone" class="shrink-0 text-xl {{ request()->is('customers*') ? 'text-white' : 'text-purple-600' }}"></iconify-icon>
-                <span class="hide-menu shrink-0">{{ __('Pelanggan B2B') }}</span>
+                <span class="hide-menu shrink-0">{{ __('Pelanggan & Mitra Distribusi') }}</span>
               </div>
               @if(request()->is('customers*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
             </a>
@@ -78,19 +89,12 @@
               @if(request()->is('vendors*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
             </a>
           </li>
-          <li class="sidebar-item">
-            <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('distributors*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/distributors">
-              <div class="flex items-center gap-3">
-                <iconify-icon icon="solar:buildings-2-bold-duotone" class="shrink-0 text-xl {{ request()->is('distributors*') ? 'text-white' : 'text-teal-600' }}"></iconify-icon>
-                <span class="hide-menu shrink-0">{{ __('Pelanggan (Customer)') }}</span>
-              </div>
-              @if(request()->is('distributors*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
-            </a>
-          </li>
         </ul>
       </div>
+      @endif
 
       <!-- Section 3: Operations & Dispatch -->
+      @if($canOperations)
       <div>
         <button type="button" 
           onclick="const el = document.getElementById('menu-operations'); el.classList.toggle('hidden'); this.querySelector('.arrow-icon').classList.toggle('rotate-180');" 
@@ -128,8 +132,10 @@
           </li>
         </ul>
       </div>
+      @endif
 
       <!-- Section 4: Inventory & Warehouse -->
+      @if($canInventory)
       <div>
         <button type="button" 
           onclick="const el = document.getElementById('menu-inventory'); el.classList.toggle('hidden'); this.querySelector('.arrow-icon').classList.toggle('rotate-180');" 
@@ -167,8 +173,10 @@
           </li>
         </ul>
       </div>
+      @endif
 
       <!-- Section 5: Finance & Billing -->
+      @if($canFinance)
       <div>
         <button type="button" 
           onclick="const el = document.getElementById('menu-finance'); el.classList.toggle('hidden'); this.querySelector('.arrow-icon').classList.toggle('rotate-180');" 
@@ -206,9 +214,10 @@
           </li>
         </ul>
       </div>
+      @endif
 
       <!-- Section 6: Governance & Users -->
-      @if(session('user_role') === 'corporate_admin' || !session()->has('user_role'))
+      @if($canUsers)
       <div>
         <div class="caption text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 px-3">
           <span>{{ __('Pengaturan & Tim') }}</span>

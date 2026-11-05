@@ -122,7 +122,7 @@
                         <td class="py-3.5 pl-6 font-bold text-slate-500">${idx + 1}</td>
                         <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">${c.code || '-'}</td>
                         <td class="py-3.5 font-bold text-slate-800 dark:text-slate-100">${c.name}</td>
-                        <td class="py-3.5 text-slate-500">${c.description || '-'}</td>
+                        <td class="py-3.5 text-slate-500">${c.description || c.deskripsi || '-'}</td>
                         <td class="py-3.5 text-center">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeClass}">${badgeLabel}</span>
                         </td>

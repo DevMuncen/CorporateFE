@@ -81,7 +81,10 @@
                         <label class="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Peran (Role) *</label>
                         <select id="userRole" name="role" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/30">
                             <option value="corporate_admin">Admin PIC (Akses Penuh &amp; Pengguna)</option>
-                            <option value="corporate_user" selected>Staff Operasional (Pesanan &amp; Logistik)</option>
+                            <option value="corporate_inventory">Staf Inventori &amp; Gudang</option>
+                            <option value="corporate_operations">Staf Operasional &amp; Pengiriman</option>
+                            <option value="corporate_finance">Staf Keuangan &amp; Akuntansi</option>
+                            <option value="corporate_user" selected>Staf Korporasi Umum</option>
                         </select>
                     </div>
 
@@ -132,15 +135,33 @@
 
                 tbody.innerHTML = usersData.map((u, idx) => {
                     const isActive = (u.is_active === true || u.is_active == 1 || String(u.is_active) === 'true');
-                    const isPic = (u.role === 'corporate_admin');
-
-                    const roleBadge = isPic
-                        ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
-                             <iconify-icon icon="solar:shield-check-bold" class="text-xs"></iconify-icon> Admin PIC
-                           </span>`
-                        : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800">
-                             <iconify-icon icon="solar:user-bold" class="text-xs"></iconify-icon> Staff Operasional
-                           </span>`;
+                    let roleBadge = '';
+                    switch (u.role) {
+                        case 'corporate_admin':
+                            roleBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                                 <iconify-icon icon="solar:shield-check-bold" class="text-xs"></iconify-icon> Admin PIC
+                               </span>`;
+                            break;
+                        case 'corporate_inventory':
+                            roleBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
+                                 <iconify-icon icon="solar:box-minimalistic-bold" class="text-xs"></iconify-icon> Staf Inventori
+                               </span>`;
+                            break;
+                        case 'corporate_operations':
+                            roleBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800">
+                                 <iconify-icon icon="solar:delivery-bold" class="text-xs"></iconify-icon> Staf Operasional
+                               </span>`;
+                            break;
+                        case 'corporate_finance':
+                            roleBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800">
+                                 <iconify-icon icon="solar:wallet-bold" class="text-xs"></iconify-icon> Staf Keuangan
+                               </span>`;
+                            break;
+                        default:
+                            roleBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                                 <iconify-icon icon="solar:user-bold" class="text-xs"></iconify-icon> Staf Korporasi
+                               </span>`;
+                    }
 
                     const statusBadge = isActive
                         ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">

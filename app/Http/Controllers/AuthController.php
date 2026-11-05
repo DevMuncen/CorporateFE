@@ -36,7 +36,7 @@ class AuthController extends Controller
                 $user = $payload['user'] ?? [];
 
                 $role = $user['role'] ?? '';
-                if (! in_array($role, ['corporate_admin', 'corporate_user', 'super_admin', 'admin'])) {
+                if (! in_array($role, ['corporate_admin', 'corporate_inventory', 'corporate_operations', 'corporate_finance', 'corporate_user', 'super_admin', 'admin'])) {
                     return back()->with('error', 'Akses ditolak. Akun Anda bukan akun Corporate.');
                 }
 

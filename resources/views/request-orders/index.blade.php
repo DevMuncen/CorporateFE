@@ -153,6 +153,21 @@
                             </td>
                             <td class="py-3.5 pr-6 text-right">
                                 <div class="inline-flex items-center gap-1.5">
+                                    ${(ro.status || '').toLowerCase() === 'draft' ? `
+                                        <button type="button" onclick="quickSubmitRO(${ro.id})" class="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 font-bold transition-all text-xs flex items-center gap-1" title="Ajukan ke Logistik">
+                                            <iconify-icon icon="solar:check-circle-bold"></iconify-icon>
+                                            <span class="hidden md:inline">Ajukan</span>
+                                        </button>
+                                        <button type="button" onclick="quickDeleteDraft(${ro.id})" class="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all text-xs" title="Hapus Draft">
+                                            <iconify-icon icon="solar:trash-bin-trash-linear" class="text-base"></iconify-icon>
+                                        </button>
+                                    ` : ''}
+                                    ${(ro.status || '').toLowerCase() === 'submitted' ? `
+                                        <button type="button" onclick="quickWithdrawRO(${ro.id})" class="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold transition-all text-xs flex items-center gap-1" title="Tarik Kembali ke Draft">
+                                            <iconify-icon icon="solar:restart-bold"></iconify-icon>
+                                            <span class="hidden md:inline">Tarik</span>
+                                        </button>
+                                    ` : ''}
                                     <a href="/request-orders/${ro.id}" class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-bold hover:bg-blue-100 transition-all">
                                         Detail
                                     </a>
@@ -164,6 +179,69 @@
             } catch (err) {
                 console.error('Fetch ROs error:', err);
                 tbody.innerHTML = `<tr><td colspan="9" class="py-12 text-center text-slate-400">Gagal memuat request order.</td></tr>`;
+            }
+        }
+
+        async function quickSubmitRO(id) {
+            const confirm = await Swal.fire({
+                title: 'Ajukan ke Logistik?',
+                text: 'Order akan diteruskan ke mitra logistik untuk dialokasikan armada truk & driver.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Ajukan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#053363'
+            });
+            if (!confirm.isConfirmed) return;
+
+            try {
+                await axios.post(`/api/request-orders/${id}/submit`);
+                Swal.fire({ icon: 'success', title: 'Berhasil Diajukan', text: 'RO telah diteruskan ke logistik.', confirmButtonColor: '#053363' });
+                fetchRequestOrders();
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Gagal', text: err.response?.data?.message || 'Gagal mengajukan RO.', confirmButtonColor: '#053363' });
+            }
+        }
+
+        async function quickWithdrawRO(id) {
+            const confirm = await Swal.fire({
+                title: 'Tarik ke Draft?',
+                text: 'Pesanan akan kembali berstatus Draft sehingga dapat diubah.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Tarik',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d97706'
+            });
+            if (!confirm.isConfirmed) return;
+
+            try {
+                await axios.post(`/api/request-orders/${id}/withdraw`);
+                Swal.fire({ icon: 'success', title: 'Berhasil Ditarik', text: 'RO kembali menjadi draft.', confirmButtonColor: '#053363' });
+                fetchRequestOrders();
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Gagal', text: err.response?.data?.message || 'Gagal menarik RO.', confirmButtonColor: '#053363' });
+            }
+        }
+
+        async function quickDeleteDraft(id) {
+            const confirm = await Swal.fire({
+                title: 'Hapus Draft?',
+                text: 'Data draft pemesanan dan alokasi stok akan dihapus permanen.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626'
+            });
+            if (!confirm.isConfirmed) return;
+
+            try {
+                await axios.delete(`/api/request-orders/${id}`);
+                Swal.fire({ icon: 'success', title: 'Dihapus', text: 'Draft berhasil dihapus.', confirmButtonColor: '#053363' });
+                fetchRequestOrders();
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'Gagal', text: err.response?.data?.message || 'Gagal menghapus draft.', confirmButtonColor: '#053363' });
             }
         }
 

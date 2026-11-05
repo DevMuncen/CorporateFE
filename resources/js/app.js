@@ -35,7 +35,11 @@ window.formatCurrency = function(amount) {
 
 // Universal Sidebar Toggle Helper
 window.toggleAnySidebar = function(e) {
-    if (e && e.preventDefault) e.preventDefault();
+    if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+    }
     const sidebar = document.getElementById('application-sidebar-brand');
     const pageWrapper = document.querySelector('.page-wrapper');
     if (!sidebar) return;
@@ -47,6 +51,9 @@ window.toggleAnySidebar = function(e) {
 
     const isDesktop = window.innerWidth >= 1280;
     if (isDesktop) {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.remove('open', 'opened', 'hs-overlay-open');
+
         const isCollapsed = sidebar.classList.contains('desktop-sidebar-collapsed');
         if (isCollapsed) {
             sidebar.classList.remove('desktop-sidebar-collapsed');
@@ -69,6 +76,7 @@ window.toggleAnySidebar = function(e) {
             if (isOpened) {
                 window.HSOverlay.close(sidebar);
             } else {
+                sidebar.classList.remove('hidden');
                 window.HSOverlay.open(sidebar);
             }
         } else {
@@ -78,6 +86,29 @@ window.toggleAnySidebar = function(e) {
     }
 };
 window.toggleDesktopSidebar = window.toggleAnySidebar;
+
+// Desktop breakpoint safeguard on window resize
+window.addEventListener('resize', () => {
+    const sidebar = document.getElementById('application-sidebar-brand');
+    const pageWrapper = document.querySelector('.page-wrapper');
+    if (!sidebar) return;
+
+    if (window.innerWidth >= 1280) {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.remove('open', 'opened', 'hs-overlay-open');
+        document.querySelectorAll('.hs-overlay-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('overflow-hidden');
+        document.body.style.overflow = '';
+
+        if (!sidebar.classList.contains('desktop-sidebar-collapsed')) {
+            sidebar.style.transform = '';
+            if (pageWrapper) {
+                pageWrapper.style.marginLeft = '';
+                pageWrapper.style.width = '';
+            }
+        }
+    }
+});
 
 // Global safeguard against Preline backdrop locking screens on any device or viewport
 function cleanupAllBackdrops() {

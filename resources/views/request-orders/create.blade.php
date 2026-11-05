@@ -125,6 +125,35 @@
                                 Tujuan Pengiriman Langsung (Direct Destination)
                             </span>
                         </div>
+
+                        <!-- Customer Selection (Autofill & Foreign Key Tie) -->
+                        <div class="p-3.5 bg-white dark:bg-slate-800 rounded-2xl border border-blue-100 dark:border-blue-900/50 shadow-2xs space-y-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm">
+                                        <iconify-icon icon="solar:users-group-rounded-bold-duotone"></iconify-icon>
+                                    </span>
+                                    <div>
+                                        <span class="block font-bold text-xs text-slate-800 dark:text-slate-100">
+                                            Pilih Data Pelanggan / Mitra Distribusi (Opsional - Autofill &amp; Terikat Relasi)
+                                        </span>
+                                        <span class="text-[10px] text-slate-400">Pilih dari master pelanggan atau mitra distribusi korporasi untuk autofill nama, telepon, kota, dan alamat</span>
+                                    </div>
+                                </div>
+                                <div id="customerTiedBadge" class="hidden inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
+                                    <iconify-icon icon="solar:link-circle-bold"></iconify-icon>
+                                    <span id="customerTiedText">Terikat Relasi</span>
+                                </div>
+                            </div>
+                            <x-modal-picker 
+                                id="corporateCustomer" 
+                                name="customer_id" 
+                                label="" 
+                                url="/api/customers" 
+                                placeholder="Cari atau pilih Pelanggan / Mitra Distribusi..." 
+                                :required="false" 
+                            />
+                        </div>
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                             <div>
                                 <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">
@@ -154,6 +183,20 @@
                                 Alamat Lengkap Bongkar <span class="text-rose-500">*</span>
                             </label>
                             <input type="text" class="drop-address w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs" placeholder="Jl. Raya Kopo No. 120, Kota Bandung" required />
+                        </div>
+
+                        <!-- Route & Contract Diagnostic Notice in Step 2 -->
+                        <div id="routeContractNotice" class="hidden mt-3 p-3 rounded-xl border text-xs flex items-center justify-between gap-3 transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <span id="routeContractIconWrapper" class="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0 bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+                                    <iconify-icon id="routeContractIcon" icon="solar:info-circle-bold"></iconify-icon>
+                                </span>
+                                <div>
+                                    <div id="routeContractNoticeTitle" class="font-bold text-[11px] text-slate-900 dark:text-white">Pemeriksaan Tarif Kontrak</div>
+                                    <div id="routeContractNoticeText" class="text-[10px] text-slate-500 dark:text-slate-400">Memeriksa ketersediaan tarif rute pada kontrak...</div>
+                                </div>
+                            </div>
+                            <span id="routeContractNoticeBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Memeriksa</span>
                         </div>
                     </div>
                 </div>
@@ -264,125 +307,42 @@
                     </div>
                 </div>
 
-                <!-- Fleet / Truck Cards Grid -->
+                <!-- Transporter & Active Contract Info Bar -->
+                <div id="carrierContractInfo" class="hidden flex flex-wrap items-center justify-between gap-3 p-3.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-2xl border border-blue-100 dark:border-blue-900 text-xs">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center text-base shadow-sm">
+                            <iconify-icon icon="solar:shield-check-bold"></iconify-icon>
+                        </span>
+                        <div>
+                            <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Mitra Transporter &amp; Kontrak Aktif</div>
+                            <div class="font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                <span id="contractedCarrierName">-</span>
+                                <span class="text-slate-300 dark:text-slate-600">•</span>
+                                <span id="contractedRefNumber" class="font-mono text-blue-600 dark:text-blue-400 font-bold">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        <iconify-icon icon="solar:check-circle-bold"></iconify-icon>
+                        <span>Tarif Mengikat Sesuai Kontrak</span>
+                    </span>
+                </div>
+
+                <!-- Missing Contract / Pricing Warning Alert Card (Shown when no active contract or route pricing) -->
+                <div id="noContractAlertBanner" class="hidden p-5 rounded-2xl border transition-all text-xs">
+                    <!-- Populated dynamically with diagnostic details and quick action buttons -->
+                </div>
+
+                <!-- Fleet / Truck Cards Grid (Rendered dynamically from active contract) -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs" id="fleetSelectionContainer">
-                    <!-- CDE Card -->
-                    <div class="fleet-card cursor-pointer p-4 rounded-2xl border-2 border-blue-600 bg-blue-50/40 dark:bg-blue-950/40 relative flex flex-col justify-between transition-all hover:shadow-md" data-fleet-id="1" data-capacity="2000" onclick="selectFleet(1)">
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400">
-                                    <iconify-icon icon="solar:delivery-bold" class="text-xl"></iconify-icon>
-                                </span>
-                                <span class="fleet-badge px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white">Dipilih</span>
-                            </div>
-                            <h4 class="font-black text-sm text-slate-900 dark:text-white">CDE Box (Engkel)</h4>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Colt Diesel Engkel 4 Roda</p>
-                            
-                            <div class="mt-3 space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
-                                <div class="flex justify-between">
-                                    <span>Kapasitas Tonase:</span>
-                                    <span class="font-bold">2.000 kg (2.0 Ton)</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Volume Muatan:</span>
-                                    <span class="font-bold">7.0 CBM</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-                            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tarif Dasar Truk:</span>
-                            <div class="text-sm font-black text-blue-600 dark:text-blue-400 fleet-rate-display" id="cde-rate-display">Rp 3.500.000</div>
-                        </div>
-                    </div>
-
-                    <!-- CDD Card -->
-                    <div class="fleet-card cursor-pointer p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 relative flex flex-col justify-between transition-all hover:shadow-md hover:border-blue-400" data-fleet-id="2" data-capacity="4000" onclick="selectFleet(2)">
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                    <iconify-icon icon="solar:transmission-bold" class="text-xl"></iconify-icon>
-                                </span>
-                                <span class="fleet-badge px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 hidden">Dipilih</span>
-                            </div>
-                            <h4 class="font-black text-sm text-slate-900 dark:text-white">CDD Box (Double)</h4>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Colt Diesel Double 6 Roda</p>
-                            
-                            <div class="mt-3 space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
-                                <div class="flex justify-between">
-                                    <span>Kapasitas Tonase:</span>
-                                    <span class="font-bold">4.000 kg (4.0 Ton)</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Volume Muatan:</span>
-                                    <span class="font-bold">14.0 CBM</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-                            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tarif Dasar Truk:</span>
-                            <div class="text-sm font-black text-slate-900 dark:text-white fleet-rate-display" id="cdd-rate-display">Rp 4.500.000</div>
-                        </div>
-                    </div>
-
-                    <!-- Fuso Card -->
-                    <div class="fleet-card cursor-pointer p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 relative flex flex-col justify-between transition-all hover:shadow-md hover:border-blue-400" data-fleet-id="3" data-capacity="8000" onclick="selectFleet(3)">
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                    <iconify-icon icon="solar:bus-bold" class="text-xl"></iconify-icon>
-                                </span>
-                                <span class="fleet-badge px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 hidden">Dipilih</span>
-                            </div>
-                            <h4 class="font-black text-sm text-slate-900 dark:text-white">Fuso Heavy Box</h4>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Medium Truck Heavy Duty</p>
-                            
-                            <div class="mt-3 space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
-                                <div class="flex justify-between">
-                                    <span>Kapasitas Tonase:</span>
-                                    <span class="font-bold">8.000 kg (8.0 Ton)</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Volume Muatan:</span>
-                                    <span class="font-bold">30.0 CBM</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-                            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tarif Dasar Truk:</span>
-                            <div class="text-sm font-black text-slate-900 dark:text-white fleet-rate-display" id="fuso-rate-display">Rp 7.500.000</div>
-                        </div>
-                    </div>
-
-                    <!-- Tronton Wingbox Card -->
-                    <div class="fleet-card cursor-pointer p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 relative flex flex-col justify-between transition-all hover:shadow-md hover:border-blue-400" data-fleet-id="4" data-capacity="15000" onclick="selectFleet(4)">
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                    <iconify-icon icon="solar:box-bold" class="text-xl"></iconify-icon>
-                                </span>
-                                <span class="fleet-badge px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 hidden">Dipilih</span>
-                            </div>
-                            <h4 class="font-black text-sm text-slate-900 dark:text-white">Tronton Wingbox</h4>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Heavy Long Wingbox 3-Axle</p>
-                            
-                            <div class="mt-3 space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
-                                <div class="flex justify-between">
-                                    <span>Kapasitas Tonase:</span>
-                                    <span class="font-bold">15.000 kg (15.0 Ton)</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Volume Muatan:</span>
-                                    <span class="font-bold">48.0 CBM</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-                            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Tarif Dasar Truk:</span>
-                            <div class="text-sm font-black text-slate-900 dark:text-white fleet-rate-display" id="tronton-rate-display">Rp 12.500.000</div>
-                        </div>
+                    <div class="col-span-full py-8 text-center bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                        <iconify-icon icon="solar:routing-2-bold-duotone" class="text-3xl text-slate-400 mb-2"></iconify-icon>
+                        <p class="text-xs text-slate-500 font-medium">Silakan lengkapi Gudang Asal dan Kota Tujuan terlebih dahulu untuk memuat armada dari kontrak korporasi.</p>
                     </div>
                 </div>
-                <input type="hidden" id="selectedFleetTypeId" name="fleet_type_id" value="1" />
+                <input type="hidden" id="selectedFleetTypeId" name="fleet_type_id" value="" />
+                <input type="hidden" id="selectedLogisticId" name="logistic_id" value="" />
+                <input type="hidden" id="selectedContractId" name="contract_id" value="" />
 
                 <!-- Direct Route Truck Pricing Breakdown Card -->
                 <div class="bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 text-xs">
@@ -428,13 +388,16 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
                         <h5 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[10px]">Titik Muat &amp; Tujuan</h5>
+                        <p><strong class="text-slate-700 dark:text-slate-300">Pelanggan:</strong> <span id="reviewCustomer" class="text-blue-600 font-bold">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Gudang Asal:</strong> <span id="reviewOrigin">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Tujuan Direct:</strong> <span id="reviewDestinations">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Jadwal Muat:</strong> <span id="reviewDeparture">-</span></p>
                     </div>
 
                     <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
-                        <h5 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[10px]">Armada &amp; Tarif Truk</h5>
+                        <h5 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[10px]">Armada &amp; Tarif Kontrak</h5>
+                        <p><strong class="text-slate-700 dark:text-slate-300">Kontrak Induk:</strong> <span id="reviewContract" class="font-mono font-bold text-blue-600 dark:text-blue-400">-</span></p>
+                        <p><strong class="text-slate-700 dark:text-slate-300">Transporter:</strong> <span id="reviewLogistic">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Armada Truk:</strong> <span id="reviewFleet">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Total Muatan:</strong> <span id="reviewWeight">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Total Tarif Truk:</strong> <span id="reviewTotalCost" class="text-blue-600 font-black">-</span></p>
@@ -457,9 +420,13 @@
                         <span>Lanjut Tahap Berikutnya</span>
                         <iconify-icon icon="solar:arrow-right-linear" class="text-base"></iconify-icon>
                     </button>
-                    <button type="button" id="submitBtn" onclick="submitRequestOrder()" class="px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/25 transition-all flex items-center gap-2 hidden">
+                    <button type="button" id="draftBtn" onclick="submitRequestOrder('draft')" class="px-5 py-2.5 rounded-xl font-bold text-xs text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 transition-all flex items-center gap-2 hidden">
+                        <iconify-icon icon="solar:diskette-bold" class="text-base text-slate-500"></iconify-icon>
+                        <span>Simpan sebagai Draft</span>
+                    </button>
+                    <button type="button" id="submitBtn" onclick="submitRequestOrder('submitted')" class="px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/25 transition-all flex items-center gap-2 hidden">
                         <iconify-icon icon="solar:check-circle-bold" class="text-base"></iconify-icon>
-                        <span>Kirim Request Order Sekarang</span>
+                        <span>Konfirmasi &amp; Ajukan RO</span>
                     </button>
                 </div>
             </div>

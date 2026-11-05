@@ -299,19 +299,18 @@
                     </h4>
                     <div class="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-bold">
+                            <thead id="distModalItemsHead" class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 text-slate-500 font-bold">
                                 <tr>
                                     <th class="py-2.5 pl-4 w-10">No</th>
                                     <th class="py-2.5">Nama Produk &amp; SKU</th>
                                     <th class="py-2.5 text-center">Qty Diterima</th>
                                     <th class="py-2.5 text-right">Harga Satuan (Rp)</th>
-                                    <th class="py-2.5 text-right">Diskon (Rp)</th>
                                     <th class="py-2.5 pr-4 text-right">Subtotal (Rp)</th>
                                 </tr>
                             </thead>
                             <tbody id="distModalItemsBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
                                 <tr>
-                                    <td colspan="6" class="py-6 text-center text-slate-400">Memuat rincian produk...</td>
+                                    <td colspan="5" class="py-6 text-center text-slate-400">Memuat rincian produk...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -890,13 +889,33 @@
                     document.getElementById('distModalDate').textContent = inv.invoice_date || (inv.created_at ? new Date(inv.created_at).toLocaleDateString('id-ID') : '-');
                     document.getElementById('distModalDueDate').textContent = inv.due_date ? new Date(inv.due_date).toLocaleDateString('id-ID') : '-';
                     document.getElementById('distModalGrandTotal').textContent = 'Rp ' + parseFloat(inv.grand_total_amount || inv.total_amount || 0).toLocaleString('id-ID');
-                    document.getElementById('distModalTonnage').textContent = `${parseFloat(inv.total_tonnage || 0)} Ton / ${parseFloat(inv.total_cubage || 0)} CBM`;
+                    const hasTonnage = (parseFloat(inv.total_tonnage || 0) > 0 || parseFloat(inv.total_cubage || 0) > 0);
+                    document.getElementById('distModalTonnage').textContent = hasTonnage
+                        ? `${parseFloat(inv.total_tonnage || 0)} Ton / ${parseFloat(inv.total_cubage || 0)} CBM`
+                        : '-';
 
-                    // Render items with No column
+                    // Render items with No column and dynamic Discount column
                     const items = inv.items || [];
                     const tbody = document.getElementById('distModalItemsBody');
+                    const thead = document.getElementById('distModalItemsHead');
+                    const hasDiscount = items.some(it => parseFloat(it.discount_amount || 0) > 0);
+
+                    if (thead) {
+                        thead.innerHTML = `
+                            <tr>
+                                <th class="py-2.5 pl-4 w-10">No</th>
+                                <th class="py-2.5">Nama Produk &amp; SKU</th>
+                                <th class="py-2.5 text-center">Qty Diterima</th>
+                                <th class="py-2.5 text-right">Harga Satuan (Rp)</th>
+                                ${hasDiscount ? '<th class="py-2.5 text-right">Diskon (Rp)</th>' : ''}
+                                <th class="py-2.5 pr-4 text-right">Subtotal (Rp)</th>
+                            </tr>
+                        `;
+                    }
+
                     if (!items.length) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Tidak ada rincian produk pesanan.</td></tr>`;
+                        const colCount = hasDiscount ? 6 : 5;
+                        tbody.innerHTML = `<tr><td colspan="${colCount}" class="py-6 text-center text-slate-400">Tidak ada rincian produk pesanan.</td></tr>`;
                     } else {
                         tbody.innerHTML = items.map((it, idx) => {
                             const unitPrice = parseFloat(it.unit_price || 0).toLocaleString('id-ID');
@@ -912,7 +931,7 @@
                                     </td>
                                     <td class="py-2.5 text-center font-mono font-bold">${it.qty_received || it.qty || 0}</td>
                                     <td class="py-2.5 text-right font-mono">Rp ${unitPrice}</td>
-                                    <td class="py-2.5 text-right font-mono text-rose-500">Rp ${discount}</td>
+                                    ${hasDiscount ? `<td class="py-2.5 text-right font-mono text-rose-500">Rp ${discount}</td>` : ''}
                                     <td class="py-2.5 pr-4 text-right font-mono font-bold text-slate-800 dark:text-slate-100">Rp ${subtotal}</td>
                                 </tr>
                             `;

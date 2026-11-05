@@ -46,6 +46,16 @@ class RequestOrderController extends ProxyController
         return $this->forward($request, 'PUT', "/api/corporate/request-orders/{$id}", $request->all());
     }
 
+    public function proxySubmit(Request $request, $id)
+    {
+        return $this->forward($request, 'POST', "/api/corporate/request-orders/{$id}/submit", $request->all());
+    }
+
+    public function proxyWithdraw(Request $request, $id)
+    {
+        return $this->forward($request, 'POST', "/api/corporate/request-orders/{$id}/withdraw", $request->all());
+    }
+
     public function proxyDestroy(Request $request, $id)
     {
         return $this->forward($request, 'DELETE', "/api/corporate/request-orders/{$id}");

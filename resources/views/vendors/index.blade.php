@@ -61,8 +61,14 @@
                     <input type="hidden" id="vndId" />
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kode Vendor (Opsional)</label>
-                            <input type="text" id="vndCode" placeholder="Otomatis jika dikosongkan" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-mono" />
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block font-bold text-slate-600 dark:text-slate-300">Kode Vendor</label>
+                                <button type="button" onclick="suggestVendorCode()" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer">
+                                    <iconify-icon icon="solar:magic-stick-3-linear"></iconify-icon> Saran Kode
+                                </button>
+                            </div>
+                            <input type="text" id="vndCode" placeholder="Otomatis jika dikosongkan" onblur="checkVendorCodeUniqueness()" oninput="debounceCheckVendorCode()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-mono" />
+                            <div id="vndCodeFeedback" class="text-xs mt-1 hidden"></div>
                         </div>
                         <div>
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Vendor / Carrier *</label>
@@ -165,12 +171,84 @@
             }
         }
 
+        let vndDebounceTimer = null;
+        function debounceCheckVendorCode() {
+            clearTimeout(vndDebounceTimer);
+            vndDebounceTimer = setTimeout(() => {
+                checkVendorCodeUniqueness();
+            }, 300);
+        }
+
+        async function suggestVendorCode() {
+            try {
+                const res = await axios.get('/api/internal/corporate/code/suggest?type=vendor');
+                const suggested = res.data?.data?.suggested_code;
+                if (suggested) {
+                    const input = document.getElementById('vndCode');
+                    if (input) {
+                        input.value = suggested;
+                        checkVendorCodeUniqueness();
+                    }
+                }
+            } catch (err) {
+                console.error('Suggest vendor code error:', err);
+            }
+        }
+
+        async function checkVendorCodeUniqueness() {
+            const input = document.getElementById('vndCode');
+            const code = input?.value?.trim();
+            const id = document.getElementById('vndId')?.value;
+            const feedback = document.getElementById('vndCodeFeedback');
+
+            if (!code) {
+                if (feedback) {
+                    feedback.className = 'text-xs mt-1 hidden';
+                    feedback.innerText = '';
+                }
+                input?.classList.remove('border-red-500', 'border-emerald-500');
+                return true;
+            }
+
+            try {
+                const res = await axios.get(`/api/internal/corporate/code/check?type=vendor&code=${encodeURIComponent(code)}&exclude_id=${id || ''}`);
+                const isUnique = res.data?.data?.is_unique ?? res.data?.is_unique;
+
+                if (isUnique === false) {
+                    if (feedback) {
+                        feedback.className = 'text-xs mt-1 text-red-500 block font-medium';
+                        feedback.innerText = 'Kode vendor sudah digunakan untuk korporasi ini.';
+                    }
+                    input?.classList.add('border-red-500');
+                    input?.classList.remove('border-emerald-500');
+                    return false;
+                } else {
+                    if (feedback) {
+                        feedback.className = 'text-xs mt-1 text-emerald-600 dark:text-emerald-400 block font-medium';
+                        feedback.innerText = '✓ Kode vendor tersedia';
+                    }
+                    input?.classList.remove('border-red-500');
+                    input?.classList.add('border-emerald-500');
+                    return true;
+                }
+            } catch (err) {
+                console.error('Check vendor code error:', err);
+                return true;
+            }
+        }
+
         function openVendorModal() {
             document.getElementById('vndModalTitle').innerText = 'Tambah Vendor Baru';
             document.getElementById('vendorForm').reset();
             document.getElementById('vndId').value = '';
             document.getElementById('vndCode').value = '';
             document.getElementById('vndStatus').value = '1';
+            const feedback = document.getElementById('vndCodeFeedback');
+            if (feedback) {
+                feedback.className = 'text-xs mt-1 hidden';
+                feedback.innerText = '';
+            }
+            document.getElementById('vndCode')?.classList.remove('border-red-500', 'border-emerald-500');
             document.getElementById('vendorModal').style.display = 'flex';
         }
 
@@ -196,8 +274,16 @@
         async function saveVendor(e) {
             e.preventDefault();
             const id = document.getElementById('vndId').value;
-            const isAct = document.getElementById('vndStatus').value === '1';
             const codeVal = (document.getElementById('vndCode').value || '').trim();
+            if (codeVal) {
+                const isUnique = await checkVendorCodeUniqueness();
+                if (!isUnique) {
+                    Swal.fire({ icon: 'warning', title: 'Kode Duplikat', text: 'Kode vendor ini sudah digunakan di korporasi Anda. Harap gunakan kode lain.' });
+                    document.getElementById('vndCode')?.focus();
+                    return;
+                }
+            }
+            const isAct = document.getElementById('vndStatus').value === '1';
             const payload = {
                 code: codeVal || null,
                 name: document.getElementById('vndName').value,

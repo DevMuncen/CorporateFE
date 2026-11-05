@@ -63,8 +63,14 @@
                     <input type="hidden" id="whId" />
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kode Gudang *</label>
-                            <input type="text" id="whCode" required placeholder="WH-CKR-01" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block font-bold text-slate-600 dark:text-slate-300">Kode Gudang *</label>
+                                <button type="button" onclick="suggestWarehouseCode()" class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer">
+                                    <iconify-icon icon="solar:magic-stick-3-linear"></iconify-icon> Saran Kode
+                                </button>
+                            </div>
+                            <input type="text" id="whCode" required placeholder="GW-CMP-001" onblur="checkWarehouseCodeUniqueness()" oninput="debounceCheckWarehouseCode()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl font-mono" />
+                            <div id="whCodeFeedback" class="text-xs mt-1 hidden"></div>
                         </div>
                         <div>
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Gudang *</label>
@@ -166,11 +172,83 @@
             }
         }
 
+        let whDebounceTimer = null;
+        function debounceCheckWarehouseCode() {
+            clearTimeout(whDebounceTimer);
+            whDebounceTimer = setTimeout(() => {
+                checkWarehouseCodeUniqueness();
+            }, 300);
+        }
+
+        async function suggestWarehouseCode() {
+            try {
+                const res = await axios.get('/api/internal/corporate/code/suggest?type=warehouse');
+                const suggested = res.data?.data?.suggested_code;
+                if (suggested) {
+                    const input = document.getElementById('whCode');
+                    if (input) {
+                        input.value = suggested;
+                        checkWarehouseCodeUniqueness();
+                    }
+                }
+            } catch (err) {
+                console.error('Suggest warehouse code error:', err);
+            }
+        }
+
+        async function checkWarehouseCodeUniqueness() {
+            const input = document.getElementById('whCode');
+            const code = input?.value?.trim();
+            const id = document.getElementById('whId')?.value;
+            const feedback = document.getElementById('whCodeFeedback');
+
+            if (!code) {
+                if (feedback) {
+                    feedback.className = 'text-xs mt-1 hidden';
+                    feedback.innerText = '';
+                }
+                input?.classList.remove('border-red-500', 'border-emerald-500');
+                return true;
+            }
+
+            try {
+                const res = await axios.get(`/api/internal/corporate/code/check?type=warehouse&code=${encodeURIComponent(code)}&exclude_id=${id || ''}`);
+                const isUnique = res.data?.data?.is_unique ?? res.data?.is_unique;
+
+                if (isUnique === false) {
+                    if (feedback) {
+                        feedback.className = 'text-xs mt-1 text-red-500 block font-medium';
+                        feedback.innerText = 'Kode gudang sudah digunakan untuk korporasi ini.';
+                    }
+                    input?.classList.add('border-red-500');
+                    input?.classList.remove('border-emerald-500');
+                    return false;
+                } else {
+                    if (feedback) {
+                        feedback.className = 'text-xs mt-1 text-emerald-600 dark:text-emerald-400 block font-medium';
+                        feedback.innerText = '✓ Kode gudang tersedia';
+                    }
+                    input?.classList.remove('border-red-500');
+                    input?.classList.add('border-emerald-500');
+                    return true;
+                }
+            } catch (err) {
+                console.error('Check warehouse code error:', err);
+                return true;
+            }
+        }
+
         function openWarehouseModal() {
             document.getElementById('whModalTitle').innerText = 'Tambah Gudang Baru';
             document.getElementById('warehouseForm').reset();
             document.getElementById('whId').value = '';
             document.getElementById('whStatus').value = '1';
+            const feedback = document.getElementById('whCodeFeedback');
+            if (feedback) {
+                feedback.className = 'text-xs mt-1 hidden';
+                feedback.innerText = '';
+            }
+            document.getElementById('whCode')?.classList.remove('border-red-500', 'border-emerald-500');
             if (window.setPickerValue) {
                 window.setPickerValue('whCityPicker', '', '');
             } else {
@@ -218,6 +296,20 @@
         async function saveWarehouse(e) {
             e.preventDefault();
             const id = document.getElementById('whId').value;
+            const codeVal = document.getElementById('whCode').value.trim();
+            if (!codeVal) {
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Kode gudang harus diisi.' });
+                document.getElementById('whCode')?.focus();
+                return;
+            }
+
+            const isUnique = await checkWarehouseCodeUniqueness();
+            if (!isUnique) {
+                Swal.fire({ icon: 'warning', title: 'Kode Duplikat', text: 'Kode gudang ini sudah digunakan di korporasi Anda. Harap gunakan kode lain.' });
+                document.getElementById('whCode')?.focus();
+                return;
+            }
+
             const isAct = document.getElementById('whStatus').value === '1';
             const cityVal = document.getElementById('hidden-whCityPicker')?.value || document.getElementById('display-whCityPicker')?.value || '';
             if (!cityVal) {

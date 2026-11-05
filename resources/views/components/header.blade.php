@@ -4,7 +4,6 @@
       <!-- Universal Sidebar Toggle -->
       <button type="button" 
         class="text-2xl icon-hover cursor-pointer text-slate-600 dark:text-slate-300 sidebartoggler h-9 w-9 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex justify-center items-center rounded-xl transition-colors border-0 bg-transparent focus:outline-none shrink-0"
-        data-hs-overlay="#application-sidebar-brand"
         onclick="window.toggleAnySidebar(event)" 
         aria-label="Toggle navigation">
         <iconify-icon icon="solar:hamburger-menu-linear" class="relative z-1 text-xl"></iconify-icon>
@@ -59,9 +58,26 @@
           <div class="py-2 px-3 border-b border-slate-100 dark:border-slate-700">
             <p class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ session('user_name', 'Corporate Merchant') }}</p>
             <p class="text-[10px] text-slate-500 dark:text-slate-400">{{ session('user_email', 'korporasi@muncen.com') }}</p>
+            @php
+              $r = session('user_role');
+              $roleLabel = match($r) {
+                'corporate_admin' => 'PIC Admin',
+                'corporate_inventory' => 'Staf Inventori',
+                'corporate_operations' => 'Staf Operasional',
+                'corporate_finance' => 'Staf Keuangan',
+                default => 'Staf Korporasi',
+              };
+              $roleBadgeColor = match($r) {
+                'corporate_admin' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300',
+                'corporate_inventory' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300',
+                'corporate_operations' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300',
+                'corporate_finance' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-300',
+                default => 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+              };
+            @endphp
             <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-              <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold {{ session('user_role') === 'corporate_admin' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' }}">
-                {{ session('user_role') === 'corporate_admin' ? 'PIC Admin' : 'Staff' }}
+              <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold {{ $roleBadgeColor }}">
+                {{ $roleLabel }}
               </span>
               <span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
                 {{ session('corporate_name') ?: 'Tenant #' . session('corporate_id', '1') }}
