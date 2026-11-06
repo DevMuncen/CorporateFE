@@ -201,17 +201,9 @@
                         <a href="/warehouses" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Kelola</a>
                     </div>
                     <div id="dash-warehouses-list" class="space-y-3">
-                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-lg shrink-0">
-                                    <iconify-icon icon="solar:buildings-bold-duotone"></iconify-icon>
-                                </div>
-                                <div>
-                                    <h5 class="text-xs font-bold text-slate-900 dark:text-slate-100">Gudang Pusat Cikarang</h5>
-                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Bekasi, Jawa Barat</p>
-                                </div>
-                            </div>
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">Aktif</span>
+                        <div class="py-8 flex flex-col items-center justify-center text-center text-slate-400">
+                            <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mb-2"></div>
+                            <span class="text-xs">Memuat daftar gudang...</span>
                         </div>
                     </div>
                 </div>
