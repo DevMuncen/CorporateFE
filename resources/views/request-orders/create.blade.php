@@ -59,7 +59,7 @@
             <div id="step-content-1" class="wizard-step space-y-5">
                 <div class="border-b border-slate-100 dark:border-slate-700 pb-3">
                     <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                        <iconify-icon icon="solar:warehouse-bold-duotone" class="text-xl text-blue-600"></iconify-icon>
+                        <iconify-icon icon="solar:buildings-bold-duotone" class="text-xl text-blue-600"></iconify-icon>
                         <span>Tahap 1: Titik Muat / Gudang Asal</span>
                     </h3>
                     <p class="text-xs text-slate-500">Pilih hub keberangkatan armada dan waktu kesiapan kargo menggunakan picker pencarian</p>

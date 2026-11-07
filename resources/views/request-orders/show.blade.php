@@ -119,7 +119,7 @@
             <!-- Gudang Asal (Origin) -->
             <div class="p-5 rounded-3xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs space-y-3">
                 <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <iconify-icon icon="solar:warehouse-bold-duotone" class="text-base text-blue-600"></iconify-icon>
+                    <iconify-icon icon="solar:buildings-bold-duotone" class="text-base text-blue-600"></iconify-icon>
                     <span>Gudang Asal (Origin)</span>
                 </div>
                 <div class="space-y-1 text-xs">
