@@ -217,13 +217,13 @@ function bindCustomerPicker() {
                         badgeText.innerText = `Terikat: ${item.name} (Mitra Distribusi: ${item.code || 'DIST'})`;
                     } else {
                         badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300';
-                        badgeText.innerText = `Terikat: ${item.name} (Pelanggan B2B: ${item.code || 'B2B'})`;
+                        badgeText.innerText = `Terikat: ${item.name} (Pelanggan: ${item.code || 'CUST'})`;
                     }
                 }
             }
 
             if (window.Alert) {
-                const label = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan B2B';
+                const label = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan';
                 window.Alert.toast(`Data ${label} ${item.name} berhasil dimuat otomatis.`, 'success');
             }
         } else {
@@ -1097,8 +1097,8 @@ function populateReviewStep() {
 
     if (revCustomer) {
         if (roState.customer_name) {
-            const typeStr = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan B2B';
-            revCustomer.innerText = `${roState.customer_name} (${roState.customer_code || 'B2B'}) [${typeStr}]`;
+            const typeStr = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan';
+            revCustomer.innerText = `${roState.customer_name} (${roState.customer_code || 'CUST'}) [${typeStr}]`;
         } else {
             revCustomer.innerText = 'Penerima Manual (Non-Pelanggan)';
         }

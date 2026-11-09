@@ -22,7 +22,7 @@
                 Semua Data
             </button>
             <button type="button" onclick="setFilterType('customer')" id="btnFilterCust" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200">
-                Pelanggan B2B
+                Pelanggan
             </button>
             <button type="button" onclick="setFilterType('distributor')" id="btnFilterDist" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200">
                 Mitra Distribusi (Distributor)
@@ -78,13 +78,13 @@
                         <div>
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Tipe Entitas *</label>
                             <select id="custType" required class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold">
-                                <option value="customer">Pelanggan (Customer B2B)</option>
+                                <option value="customer">Pelanggan</option>
                                 <option value="distributor">Mitra Distribusi (Distributor Partner)</option>
                             </select>
                         </div>
                         <div>
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Kode *</label>
-                            <input type="text" id="custCode" required placeholder="CUST-B2B-01 / DIST-01" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
+                            <input type="text" id="custCode" required placeholder="CUST-01 / DIST-01" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl" />
                         </div>
                         <div class="lg:col-span-2">
                             <label class="block font-bold text-slate-600 dark:text-slate-300 mb-1">Nama Perusahaan / Toko / Distributor *</label>
@@ -190,7 +190,7 @@
                     const isDist = (c.type === 'distributor');
                     const typeBadge = isDist 
                         ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border border-purple-200 dark:border-purple-800"><iconify-icon icon="solar:shop-2-bold"></iconify-icon>Mitra Distribusi</span>'
-                        : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800"><iconify-icon icon="solar:users-group-two-rounded-bold"></iconify-icon>Pelanggan B2B</span>';
+                        : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800"><iconify-icon icon="solar:users-group-two-rounded-bold"></iconify-icon>Pelanggan</span>';
 
                     return `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
