@@ -212,6 +212,16 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::get('/products', [CorporateProductController::class, 'proxyList']);
         Route::get('/warehouses', [CorporateWarehouseController::class, 'proxyList']);
         Route::get('/waybills', [WaybillController::class, 'proxyList']);
+
+        Route::get('/orders', [CorporateCustomerOrderController::class, 'proxyList']);
+        Route::get('/orders/form-dependencies', [CorporateCustomerOrderController::class, 'proxyFormDependencies']);
+        Route::post('/orders', [CorporateCustomerOrderController::class, 'proxyStore']);
+        Route::get('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyShow']);
+        Route::put('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyUpdate']);
+        Route::delete('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyDestroy']);
+        Route::post('/orders/{id}/confirm', [CorporateCustomerOrderController::class, 'proxyConfirm']);
+        Route::post('/orders/{id}/cancel', [CorporateCustomerOrderController::class, 'proxyCancel']);
+        Route::get('/orders/{id}/ro-prefill', [CorporateCustomerOrderController::class, 'proxyRoPrefill']);
     });
 
     // Comprehensive API Proxies for Blade AJAX requests
