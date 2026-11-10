@@ -60,6 +60,7 @@ Route::middleware(['bff.auth'])->group(function () {
 
     // Inventory
     Route::get('/inventory/stocks', [InventoryController::class, 'stocks'])->name('inventory.stocks');
+    Route::get('/inventory/comparison', [InventoryController::class, 'comparison'])->name('inventory.comparison');
     Route::get('/inventory/item-ins', [InventoryController::class, 'itemIns'])->name('inventory.item-ins');
     Route::get('/inventory/item-outs', [InventoryController::class, 'itemOuts'])->name('inventory.item-outs');
 
@@ -222,6 +223,8 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::post('/orders/{id}/confirm', [CorporateCustomerOrderController::class, 'proxyConfirm']);
         Route::post('/orders/{id}/cancel', [CorporateCustomerOrderController::class, 'proxyCancel']);
         Route::get('/orders/{id}/ro-prefill', [CorporateCustomerOrderController::class, 'proxyRoPrefill']);
+        Route::get('/inventory/stocks', [InventoryController::class, 'proxyStocks']);
+        Route::get('/inventory/comparison', [InventoryController::class, 'proxyComparison']);
     });
 
     // Comprehensive API Proxies for Blade AJAX requests
@@ -310,6 +313,7 @@ Route::middleware(['bff.auth'])->group(function () {
 
         // Inventory
         Route::get('/inventory/stocks', [InventoryController::class, 'proxyStocks']);
+        Route::get('/inventory/comparison', [InventoryController::class, 'proxyComparison']);
         Route::get('/inventory/item-ins', [InventoryController::class, 'proxyItemIns']);
         Route::post('/inventory/item-ins', [InventoryController::class, 'proxyStoreItemIn']);
         Route::get('/inventory/item-outs', [InventoryController::class, 'proxyItemOuts']);

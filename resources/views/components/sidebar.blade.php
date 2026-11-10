@@ -154,6 +154,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('inventory/comparison*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/inventory/comparison">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="solar:chart-square-bold-duotone" class="shrink-0 text-xl {{ request()->is('inventory/comparison*') ? 'text-white' : 'text-indigo-600' }}"></iconify-icon>
+                <span class="hide-menu shrink-0">{{ __('Perbandingan & Audit Stok') }}</span>
+              </div>
+              @if(request()->is('inventory/comparison*'))<span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>@endif
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('inventory/item-ins*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600' }}" href="/inventory/item-ins">
               <div class="flex items-center gap-3">
                 <iconify-icon icon="solar:import-bold-duotone" class="shrink-0 text-xl {{ request()->is('inventory/item-ins*') ? 'text-white' : 'text-emerald-600' }}"></iconify-icon>

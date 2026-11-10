@@ -11,6 +11,11 @@ class InventoryController extends ProxyController
         return view('inventory.stocks');
     }
 
+    public function comparison()
+    {
+        return view('inventory.comparison');
+    }
+
     public function itemIns()
     {
         return view('inventory.item-ins');
@@ -39,6 +44,11 @@ class InventoryController extends ProxyController
     public function proxyStocks(Request $request)
     {
         return $this->forward($request, 'GET', '/api/corporate/inventory/stocks', $request->all());
+    }
+
+    public function proxyComparison(Request $request)
+    {
+        return $this->forward($request, 'GET', '/api/corporate/inventory/comparison', $request->all());
     }
 
     public function proxyStoreItemOut(Request $request)

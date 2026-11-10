@@ -10,15 +10,42 @@
                     Visibilitas saldo inventori real-time per gudang hub, kuota teralokasi, dan stok siap kirim
                 </p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="/inventory/comparison" class="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-sm transition-all flex items-center gap-1.5">
+                    <iconify-icon icon="solar:chart-square-bold-duotone" class="text-base"></iconify-icon>
+                    <span>Perbandingan &amp; Audit Stok &rarr;</span>
+                </a>
                 <a href="/inventory/item-ins" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5 shadow-xs">
                     <iconify-icon icon="solar:import-bold-duotone" class="text-base text-emerald-600"></iconify-icon>
-                    <span>Riwayat Masuk (Inbound)</span>
+                    <span>Riwayat Masuk</span>
                 </a>
                 <a href="/inventory/item-outs" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5 shadow-xs">
                     <iconify-icon icon="solar:export-bold-duotone" class="text-base text-amber-600"></iconify-icon>
-                    <span>Riwayat Keluar (Outbound)</span>
+                    <span>Riwayat Keluar</span>
                 </a>
+            </div>
+        </div>
+
+        <!-- Summary KPI Strip -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-xs">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Baris SKU Gudang</div>
+                <div id="kpiStockRows" class="text-2xl font-black text-slate-900 dark:text-white mt-1">0</div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-xs">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-blue-500">Total Stok Fisik</div>
+                <div id="kpiPhysicalTotal" class="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">0 unit</div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-xs">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-amber-500">Teralokasi (PO/RO)</div>
+                <div id="kpiAllocatedTotal" class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">0 unit</div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-200 dark:border-slate-700 shadow-xs">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-500">Siap Pakai (Available)</div>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span id="kpiAvailableTotal" class="text-2xl font-black text-emerald-600 dark:text-emerald-400">0</span>
+                    <span id="kpiLowCount" class="text-[11px] font-bold text-rose-500"></span>
+                </div>
             </div>
         </div>
 
@@ -93,21 +120,35 @@
 
                 if (!data.length) {
                     tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-400">Tidak ada data stok ditemukan.</td></tr>`;
+                    document.getElementById('kpiStockRows').textContent = '0';
+                    document.getElementById('kpiPhysicalTotal').textContent = '0 unit';
+                    document.getElementById('kpiAllocatedTotal').textContent = '0 unit';
+                    document.getElementById('kpiAvailableTotal').textContent = '0';
+                    document.getElementById('kpiLowCount').textContent = '';
                     return;
                 }
 
+                let sumPhys = 0, sumAlloc = 0, sumAvail = 0, lowCount = 0;
+
                 tbody.innerHTML = data.map((s, idx) => {
-                    const available = (s.quantity || 0) - (s.allocated_quantity || 0);
+                    const phys = Number(s.quantity || 0);
+                    const alloc = Number(s.allocated_quantity || 0);
+                    const available = Math.max(0, phys - alloc);
                     const isLow = available <= (s.minimum_stock || 10);
+
+                    sumPhys += phys;
+                    sumAlloc += alloc;
+                    sumAvail += available;
+                    if (isLow) lowCount++;
 
                     return `
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                             <td class="py-3.5 pl-6 font-bold text-slate-500">${idx + 1}</td>
-                            <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">${s.product?.sku || s.sku || '-'}</td>
+                            <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">${s.product?.sku || s.product?.code || s.sku || '-'}</td>
                             <td class="py-3.5 font-bold text-slate-800 dark:text-slate-100">${s.product?.name || s.product_name || 'Produk'}</td>
                             <td class="py-3.5 text-slate-600 dark:text-slate-300">${s.warehouse?.name || 'Gudang Pusat'}</td>
-                            <td class="py-3.5 text-right font-semibold text-slate-800 dark:text-slate-200">${(s.quantity || 0).toLocaleString('id-ID')} unit</td>
-                            <td class="py-3.5 text-right text-amber-600 dark:text-amber-400 font-semibold">${(s.allocated_quantity || 0).toLocaleString('id-ID')} unit</td>
+                            <td class="py-3.5 text-right font-semibold text-slate-800 dark:text-slate-200">${phys.toLocaleString('id-ID')} unit</td>
+                            <td class="py-3.5 text-right text-amber-600 dark:text-amber-400 font-semibold">${alloc.toLocaleString('id-ID')} unit</td>
                             <td class="py-3.5 text-right font-black text-emerald-600 dark:text-emerald-400">${available.toLocaleString('id-ID')} unit</td>
                             <td class="py-3.5 pr-6 text-center">
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isLow ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700'}">
@@ -117,6 +158,12 @@
                         </tr>
                     `;
                 }).join('');
+
+                document.getElementById('kpiStockRows').textContent = data.length;
+                document.getElementById('kpiPhysicalTotal').textContent = sumPhys.toLocaleString('id-ID') + ' unit';
+                document.getElementById('kpiAllocatedTotal').textContent = sumAlloc.toLocaleString('id-ID') + ' unit';
+                document.getElementById('kpiAvailableTotal').textContent = sumAvail.toLocaleString('id-ID') + ' unit';
+                document.getElementById('kpiLowCount').textContent = lowCount > 0 ? `(${lowCount} SKU menipis)` : '';
             } catch (err) {
                 console.error('Fetch stocks error:', err);
                 tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-400">Gagal memuat saldo stok.</td></tr>`;

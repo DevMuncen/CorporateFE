@@ -8,6 +8,8 @@ window.availableWarehouses = [];
 
 const roState = {
     customer_id: null,
+    customer_order_id: null,
+    customer_order_number: '',
     distributor_id: null,
     customer_name: '',
     customer_code: '',
@@ -69,11 +71,237 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 6. Bind Product Picker search
     bindProductPickerSearch();
 
-    // 7. Pre-add 1 demo item row if empty
-    if (window.availableProducts.length > 0) {
+    // 7. Check if importing from an existing Customer Purchase Order (?from_order_id=...)
+    const fromOrderId = new URLSearchParams(window.location.search).get('from_order_id');
+    if (fromOrderId) {
+        await importFromCustomerOrder(fromOrderId);
+    } else if (window.availableProducts.length > 0) {
         addProductToCargo(window.availableProducts[0], 10);
     }
 });
+
+let cachedConfirmedPos = [];
+
+window.openPoImportModal = async function() {
+    const modal = document.getElementById('modal-po-import');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    }
+    const tbody = document.getElementById('tbody-po-import');
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400"><iconify-icon icon="solar:spinner-line" class="animate-spin text-lg inline-block mr-1"></iconify-icon> Memuat daftar PO terkonfirmasi...</td></tr>';
+    }
+    try {
+        const res = await axios.get('/api/internal/orders', { params: { status: 'confirmed', per_page: 50 } });
+        cachedConfirmedPos = res.data?.data?.data || [];
+        renderPoImportList(cachedConfirmedPos);
+    } catch (err) {
+        console.error('Fetch confirmed POs error:', err);
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-rose-500">Gagal memuat daftar PO terkonfirmasi.</td></tr>';
+        }
+    }
+};
+
+window.closePoImportModal = function() {
+    const modal = document.getElementById('modal-po-import');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+};
+
+window.filterPoImportList = function(query) {
+    const q = String(query || '').toLowerCase().trim();
+    if (!q) {
+        renderPoImportList(cachedConfirmedPos);
+        return;
+    }
+    const filtered = cachedConfirmedPos.filter(o => {
+        const num = String(o.order_number || '').toLowerCase();
+        const poNum = String(o.customer_po_number || '').toLowerCase();
+        const cust = String(o.customer?.name || o.recipient_name || '').toLowerCase();
+        return num.includes(q) || poNum.includes(q) || cust.includes(q);
+    });
+    renderPoImportList(filtered);
+};
+
+function renderPoImportList(list) {
+    const tbody = document.getElementById('tbody-po-import');
+    if (!tbody) return;
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Tidak ada Purchase Order terkonfirmasi yang siap dikirim. <a href="/orders/create" class="text-blue-600 font-bold hover:underline">Buat PO baru &rarr;</a></td></tr>';
+        return;
+    }
+    tbody.innerHTML = list.map(o => {
+        const typeBadge = o.customer_type === 'distributor'
+            ? '<span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[9px] font-bold">Mitra Distribusi</span>'
+            : '<span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[9px] font-bold">Pelanggan</span>';
+        return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
+                <td class="px-4 py-3">
+                    <div class="font-mono font-bold text-blue-600 dark:text-blue-400">${o.order_number}</div>
+                    ${o.customer_po_number ? `<div class="text-[10px] text-slate-500 font-mono">PO Pembeli: ${o.customer_po_number}</div>` : ''}
+                    <div class="text-[10px] text-slate-400">${o.order_date || '-'}</div>
+                </td>
+                <td class="px-4 py-3">
+                    <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 flex-wrap">${o.customer?.name || o.recipient_name} ${typeBadge}</div>
+                    <div class="text-[10px] text-slate-400">${o.destination_city_name || o.destination_city_code || '-'}</div>
+                </td>
+                <td class="px-4 py-3 text-slate-600 dark:text-slate-300 font-semibold">${o.origin_warehouse?.name || '-'}</td>
+                <td class="px-4 py-3 text-right">
+                    <div class="font-bold text-slate-800 dark:text-slate-200">${Number(o.total_quantity || 0).toLocaleString('id-ID')} unit</div>
+                    <div class="text-[10px] text-slate-400">${Number(o.total_weight_kg || 0).toLocaleString('id-ID')} kg</div>
+                </td>
+                <td class="px-4 py-3 text-end">
+                    <button type="button" onclick="window.selectPoForRo(${o.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs transition-all">
+                        Muat ke RO
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+window.selectPoForRo = async function(orderId) {
+    window.closePoImportModal();
+    await importFromCustomerOrder(orderId);
+};
+
+window.clearImportedPo = function() {
+    roState.customer_order_id = null;
+    roState.customer_order_number = '';
+    const banner = document.getElementById('importedPoBanner');
+    if (banner) banner.classList.add('hidden');
+    const reviewPoRow = document.getElementById('reviewPoRow');
+    if (reviewPoRow) reviewPoRow.classList.add('hidden');
+    if (window.Alert) {
+        window.Alert.toast('Ikatan PO telah dilepas. Anda dapat mengisi RO secara manual.', 'info');
+    }
+};
+
+// Auto-import prefill data from confirmed Customer / Distributor Purchase Order
+window.importFromCustomerOrder = async function(orderId) {
+    try {
+        const res = await axios.get(`/api/internal/orders/${orderId}/ro-prefill`);
+        const d = res.data?.data;
+        if (!d) return;
+
+        roState.customer_order_id = d.customer_order_id;
+        roState.customer_order_number = d.order_number;
+        roState.customer_id = d.customer_id;
+        roState.distributor_id = d.distributor_id;
+        roState.customer_type = d.customer_type || 'customer';
+        roState.customer_name = d.customer_name || '';
+        roState.customer_code = d.customer_code || '';
+
+        // 1. Set Origin Warehouse (Step 1)
+        if (d.origin_warehouse_id) {
+            const whLabel = d.origin_warehouse ? `${d.origin_warehouse.code || ''} - ${d.origin_warehouse.name}` : `Gudang #${d.origin_warehouse_id}`;
+            roState.origin_warehouse_id = d.origin_warehouse_id;
+            roState.origin_name = d.origin_warehouse?.name || whLabel;
+            if (d.origin_warehouse?.city_code) {
+                roState.origin_city_code = d.origin_warehouse.city_code;
+            }
+            if (window.setPickerValue) {
+                await window.setPickerValue('originWarehouse', d.origin_warehouse_id, whLabel, d.origin_warehouse);
+            }
+        }
+
+        // 2. Set Customer Picker & Delivery Coordinates (Step 2 - matches corporateCustomer & drop-point-card)
+        if (d.customer_id && window.setPickerValue) {
+            const custLabel = `${d.customer_code ? d.customer_code + ' - ' : ''}${d.customer_name}`;
+            await window.setPickerValue('corporateCustomer', d.customer_id, custLabel, {
+                id: d.customer_id,
+                name: d.customer_name,
+                code: d.customer_code,
+                type: d.customer_type,
+                distributor_id: d.distributor_id,
+                city_code: d.destination_city_code,
+                city_name: d.destination_city_name,
+                address: d.delivery_address,
+                pic_name: d.recipient_name,
+                phone: d.recipient_phone,
+            });
+        }
+
+        if (d.destination_city_code) {
+            roState.destination_city_code = d.destination_city_code;
+            roState.destination_city_name = d.destination_city_name || d.destination_city_code;
+            if (window.setPickerValue) {
+                await window.setPickerValue('destinationCity', d.destination_city_code, d.destination_city_name || d.destination_city_code, {
+                    id: d.destination_city_code,
+                    name: d.destination_city_name || d.destination_city_code,
+                });
+            }
+        }
+
+        const recNameEl = document.querySelector('.drop-point-card .drop-recipient');
+        const recPhoneEl = document.querySelector('.drop-point-card .drop-phone');
+        const addrEl = document.querySelector('.drop-point-card .drop-address');
+        const poRefEl = document.getElementById('poReference');
+        const notesEl = document.getElementById('shipperNotes');
+
+        if (recNameEl) recNameEl.value = d.recipient_name || '';
+        if (recPhoneEl) recPhoneEl.value = d.recipient_phone || '';
+        if (addrEl) addrEl.value = d.delivery_address || '';
+        if (poRefEl) poRefEl.value = d.customer_po_number || d.order_number || '';
+        if (notesEl && d.notes) notesEl.value = d.notes;
+
+        roState.recipient_name = d.recipient_name || '';
+        roState.recipient_phone = d.recipient_phone || '';
+        roState.destination_address = d.delivery_address || '';
+
+        // 3. Populate Cargo Items Table (Step 3)
+        const tbody = document.getElementById('productRowsBody');
+        if (tbody) tbody.innerHTML = '';
+        roState.items = [];
+
+        (d.items || []).forEach(item => {
+            const catalogProd = window.availableProducts.find(p => String(p.id) === String(item.product_id));
+            const prodObj = catalogProd || {
+                id: item.product_id,
+                code: item.product_code,
+                name: item.product_name,
+                weight: item.weight_kg,
+                weight_kg: item.weight_kg,
+                volume_cbm: item.volume_cbm,
+                default_price: item.unit_price,
+            };
+            addProductToCargo(prodObj, parseInt(item.quantity) || 1);
+        });
+
+        calculateCargoTotals();
+
+        // 4. Recommend Fleet Type & Check Route Pricing
+        if (d.recommended_fleet_type_id) {
+            roState.fleet_type_id = d.recommended_fleet_type_id;
+        }
+        if (roState.origin_city_code && roState.destination_city_code) {
+            await fetchCarrierAndFleetOptions(false);
+        }
+
+        // 5. Show Imported PO Banner
+        const banner = document.getElementById('importedPoBanner');
+        const badgeNum = document.getElementById('importedPoBadgeNumber');
+        const badgeDetails = document.getElementById('importedPoBadgeDetails');
+        if (banner) banner.classList.remove('hidden');
+        if (badgeNum) badgeNum.textContent = d.order_number + (d.customer_po_number ? ` (PO: ${d.customer_po_number})` : '');
+        if (badgeDetails) {
+            badgeDetails.textContent = `Pembeli: ${d.customer_name} • Gudang: ${d.origin_warehouse?.name || '-'} • Tujuan: ${d.destination_city_name || d.destination_city_code} • ${d.total_weight_kg || 0} kg`;
+        }
+
+        if (window.Alert) {
+            window.Alert.toast(`PO ${d.order_number} berhasil dimuat ke Wizard RO!`, 'success');
+        }
+    } catch (err) {
+        console.error('Import from customer order error:', err);
+        if (window.Alert) {
+            window.Alert.error('Gagal Impor PO', err.response?.data?.message || 'Tidak dapat memuat data prefill dari PO pelanggan.');
+        }
+    }
+};
 
 // Bind Origin Warehouse Picker Selection
 function bindWarehousePicker() {
@@ -217,13 +445,13 @@ function bindCustomerPicker() {
                         badgeText.innerText = `Terikat: ${item.name} (Mitra Distribusi: ${item.code || 'DIST'})`;
                     } else {
                         badge.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300';
-                        badgeText.innerText = `Terikat: ${item.name} (Pelanggan B2B: ${item.code || 'B2B'})`;
+                        badgeText.innerText = `Terikat: ${item.name} (Pelanggan: ${item.code || 'CUST'})`;
                     }
                 }
             }
 
             if (window.Alert) {
-                const label = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan B2B';
+                const label = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan';
                 window.Alert.toast(`Data ${label} ${item.name} berhasil dimuat otomatis.`, 'success');
             }
         } else {
@@ -1101,10 +1329,21 @@ function populateReviewStep() {
     const revWeight = document.getElementById('reviewWeight');
     const revCost = document.getElementById('reviewTotalCost');
 
+    const revPoRow = document.getElementById('reviewPoRow');
+    const revPoNum = document.getElementById('reviewPoNumber');
+    if (revPoRow && revPoNum) {
+        if (roState.customer_order_id && roState.customer_order_number) {
+            revPoRow.classList.remove('hidden');
+            revPoNum.innerText = roState.customer_order_number;
+        } else {
+            revPoRow.classList.add('hidden');
+        }
+    }
+
     if (revCustomer) {
         if (roState.customer_name) {
-            const typeStr = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan B2B';
-            revCustomer.innerText = `${roState.customer_name} (${roState.customer_code || 'B2B'}) [${typeStr}]`;
+            const typeStr = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan';
+            revCustomer.innerText = `${roState.customer_name} (${roState.customer_code || 'CUST'}) [${typeStr}]`;
         } else {
             revCustomer.innerText = 'Penerima Manual (Non-Pelanggan)';
         }
@@ -1135,6 +1374,7 @@ window.submitRequestOrder = async function(targetStatus = 'submitted') {
     const payload = {
         status: targetStatus,
         customer_id: roState.customer_id || null,
+        customer_order_id: roState.customer_order_id || null,
         distributor_id: roState.distributor_id || null,
         order_date: roState.order_date,
         departure_date: roState.departure_date || new Date().toISOString().slice(0, 16),

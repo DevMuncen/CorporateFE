@@ -15,10 +15,35 @@
                     Formulir pemesanan armada truk langsung (Direct Route) dengan tarif kontrak dinamis
                 </p>
             </div>
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold">
-                <iconify-icon icon="solar:calculator-bold-duotone" class="text-base text-blue-600"></iconify-icon>
-                <span>Direct Truck Rate Engine Active</span>
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="openPoImportModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/25 transition-all flex items-center gap-1.5">
+                    <iconify-icon icon="solar:import-bold" class="text-base"></iconify-icon>
+                    <span>Impor / Isi dari PO Pelanggan</span>
+                </button>
+                <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold">
+                    <iconify-icon icon="solar:calculator-bold-duotone" class="text-base text-blue-600"></iconify-icon>
+                    <span>Direct Truck Rate Engine Active</span>
+                </div>
             </div>
+        </div>
+
+        <!-- Imported PO Active Banner -->
+        <div id="importedPoBanner" class="hidden p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shrink-0">
+                    <iconify-icon icon="solar:bag-check-bold-duotone"></iconify-icon>
+                </span>
+                <div>
+                    <div class="font-black text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+                        <span>Terhubung ke Purchase Order:</span>
+                        <span id="importedPoBadgeNumber" class="font-mono px-2 py-0.5 rounded bg-emerald-600 text-white text-[11px]">ORD-...</span>
+                    </div>
+                    <div id="importedPoBadgeDetails" class="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5">Gudang asal, tujuan, dan item muatan otomatis disinkronkan.</div>
+                </div>
+            </div>
+            <button type="button" onclick="clearImportedPo()" class="px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 font-bold text-[11px] shrink-0">
+                Lepas Ikatan PO
+            </button>
         </div>
 
         <!-- 5-Step Progress Indicator -->
@@ -388,6 +413,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
                         <h5 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[10px]">Titik Muat &amp; Tujuan</h5>
+                        <p id="reviewPoRow" class="hidden"><strong class="text-slate-700 dark:text-slate-300">Sumber PO:</strong> <span id="reviewPoNumber" class="font-mono text-emerald-600 font-bold">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Pelanggan:</strong> <span id="reviewCustomer" class="text-blue-600 font-bold">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Gudang Asal:</strong> <span id="reviewOrigin">-</span></p>
                         <p><strong class="text-slate-700 dark:text-slate-300">Tujuan Direct:</strong> <span id="reviewDestinations">-</span></p>
@@ -433,6 +459,50 @@
 
         </div>
 
+    </div>
+
+    <!-- Modal Picker for Confirmed Customer / Distributor POs -->
+    <div id="modal-po-import" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs" style="display: none;" onclick="window.closePoImportModal && window.closePoImportModal()">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 relative z-10 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center justify-center text-lg">
+                        <iconify-icon icon="solar:import-bold"></iconify-icon>
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900 dark:text-white">Impor Data dari Purchase Order (PO) Terkonfirmasi</h3>
+                        <p class="text-[11px] text-slate-400">Hanya menampilkan PO berstatus Terkonfirmasi (Siap Kirim) dengan stok teralokasi</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.closePoImportModal && window.closePoImportModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <iconify-icon icon="solar:close-circle-bold" class="text-xl"></iconify-icon>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <div class="relative">
+                    <input type="text" id="search-po-import" oninput="window.filterPoImportList && window.filterPoImportList(this.value)" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none text-slate-800 dark:text-slate-100" placeholder="Cari nomor pesanan, no. PO pembeli, atau nama pelanggan...">
+                    <iconify-icon icon="solar:rounded-magnifer-linear" class="absolute left-3 top-3 text-slate-400 text-sm"></iconify-icon>
+                </div>
+            </div>
+
+            <div class="overflow-y-auto overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-700 flex-1 max-h-80">
+                <table class="w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-700">
+                    <thead class="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-2.5">No. Order &amp; PO</th>
+                            <th class="px-4 py-2.5">Pembeli / Tujuan</th>
+                            <th class="px-4 py-2.5">Gudang Asal</th>
+                            <th class="px-4 py-2.5 text-right">Qty / Tonase</th>
+                            <th class="px-4 py-2.5 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-po-import" class="divide-y divide-slate-100 dark:divide-slate-700/60 bg-white dark:bg-slate-800">
+                        <tr><td colspan="5" class="py-8 text-center text-slate-400">Memuat daftar PO terkonfirmasi...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     @push('scripts')

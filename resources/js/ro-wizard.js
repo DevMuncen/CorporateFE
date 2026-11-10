@@ -9,6 +9,7 @@ window.availableWarehouses = [];
 const roState = {
     customer_id: null,
     customer_order_id: null,
+    customer_order_number: '',
     distributor_id: null,
     customer_name: '',
     customer_code: '',
@@ -79,30 +80,139 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+let cachedConfirmedPos = [];
+
+window.openPoImportModal = async function() {
+    const modal = document.getElementById('modal-po-import');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    }
+    const tbody = document.getElementById('tbody-po-import');
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400"><iconify-icon icon="solar:spinner-line" class="animate-spin text-lg inline-block mr-1"></iconify-icon> Memuat daftar PO terkonfirmasi...</td></tr>';
+    }
+    try {
+        const res = await axios.get('/api/internal/orders', { params: { status: 'confirmed', per_page: 50 } });
+        cachedConfirmedPos = res.data?.data?.data || [];
+        renderPoImportList(cachedConfirmedPos);
+    } catch (err) {
+        console.error('Fetch confirmed POs error:', err);
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-rose-500">Gagal memuat daftar PO terkonfirmasi.</td></tr>';
+        }
+    }
+};
+
+window.closePoImportModal = function() {
+    const modal = document.getElementById('modal-po-import');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+};
+
+window.filterPoImportList = function(query) {
+    const q = String(query || '').toLowerCase().trim();
+    if (!q) {
+        renderPoImportList(cachedConfirmedPos);
+        return;
+    }
+    const filtered = cachedConfirmedPos.filter(o => {
+        const num = String(o.order_number || '').toLowerCase();
+        const poNum = String(o.customer_po_number || '').toLowerCase();
+        const cust = String(o.customer?.name || o.recipient_name || '').toLowerCase();
+        return num.includes(q) || poNum.includes(q) || cust.includes(q);
+    });
+    renderPoImportList(filtered);
+};
+
+function renderPoImportList(list) {
+    const tbody = document.getElementById('tbody-po-import');
+    if (!tbody) return;
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-400">Tidak ada Purchase Order terkonfirmasi yang siap dikirim. <a href="/orders/create" class="text-blue-600 font-bold hover:underline">Buat PO baru &rarr;</a></td></tr>';
+        return;
+    }
+    tbody.innerHTML = list.map(o => {
+        const typeBadge = o.customer_type === 'distributor'
+            ? '<span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[9px] font-bold">Mitra Distribusi</span>'
+            : '<span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[9px] font-bold">Pelanggan</span>';
+        return `
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
+                <td class="px-4 py-3">
+                    <div class="font-mono font-bold text-blue-600 dark:text-blue-400">${o.order_number}</div>
+                    ${o.customer_po_number ? `<div class="text-[10px] text-slate-500 font-mono">PO Pembeli: ${o.customer_po_number}</div>` : ''}
+                    <div class="text-[10px] text-slate-400">${o.order_date || '-'}</div>
+                </td>
+                <td class="px-4 py-3">
+                    <div class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 flex-wrap">${o.customer?.name || o.recipient_name} ${typeBadge}</div>
+                    <div class="text-[10px] text-slate-400">${o.destination_city_name || o.destination_city_code || '-'}</div>
+                </td>
+                <td class="px-4 py-3 text-slate-600 dark:text-slate-300 font-semibold">${o.origin_warehouse?.name || '-'}</td>
+                <td class="px-4 py-3 text-right">
+                    <div class="font-bold text-slate-800 dark:text-slate-200">${Number(o.total_quantity || 0).toLocaleString('id-ID')} unit</div>
+                    <div class="text-[10px] text-slate-400">${Number(o.total_weight_kg || 0).toLocaleString('id-ID')} kg</div>
+                </td>
+                <td class="px-4 py-3 text-end">
+                    <button type="button" onclick="window.selectPoForRo(${o.id})" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs transition-all">
+                        Muat ke RO
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+window.selectPoForRo = async function(orderId) {
+    window.closePoImportModal();
+    await importFromCustomerOrder(orderId);
+};
+
+window.clearImportedPo = function() {
+    roState.customer_order_id = null;
+    roState.customer_order_number = '';
+    const banner = document.getElementById('importedPoBanner');
+    if (banner) banner.classList.add('hidden');
+    const reviewPoRow = document.getElementById('reviewPoRow');
+    if (reviewPoRow) reviewPoRow.classList.add('hidden');
+    if (window.Alert) {
+        window.Alert.toast('Ikatan PO telah dilepas. Anda dapat mengisi RO secara manual.', 'info');
+    }
+};
+
 // Auto-import prefill data from confirmed Customer / Distributor Purchase Order
-async function importFromCustomerOrder(orderId) {
+window.importFromCustomerOrder = async function(orderId) {
     try {
         const res = await axios.get(`/api/internal/orders/${orderId}/ro-prefill`);
         const d = res.data?.data;
         if (!d) return;
 
         roState.customer_order_id = d.customer_order_id;
+        roState.customer_order_number = d.order_number;
         roState.customer_id = d.customer_id;
         roState.distributor_id = d.distributor_id;
         roState.customer_type = d.customer_type || 'customer';
         roState.customer_name = d.customer_name || '';
         roState.customer_code = d.customer_code || '';
 
-        // 1. Set Origin Warehouse
-        if (d.origin_warehouse_id && window.setPickerValue) {
+        // 1. Set Origin Warehouse (Step 1)
+        if (d.origin_warehouse_id) {
             const whLabel = d.origin_warehouse ? `${d.origin_warehouse.code || ''} - ${d.origin_warehouse.name}` : `Gudang #${d.origin_warehouse_id}`;
-            await window.setPickerValue('originWarehouse', d.origin_warehouse_id, whLabel, d.origin_warehouse);
+            roState.origin_warehouse_id = d.origin_warehouse_id;
+            roState.origin_name = d.origin_warehouse?.name || whLabel;
+            if (d.origin_warehouse?.city_code) {
+                roState.origin_city_code = d.origin_warehouse.city_code;
+            }
+            if (window.setPickerValue) {
+                await window.setPickerValue('originWarehouse', d.origin_warehouse_id, whLabel, d.origin_warehouse);
+            }
         }
 
-        // 2. Set Customer Picker & Delivery Coordinates
+        // 2. Set Customer Picker & Delivery Coordinates (Step 2 - matches corporateCustomer & drop-point-card)
         if (d.customer_id && window.setPickerValue) {
             const custLabel = `${d.customer_code ? d.customer_code + ' - ' : ''}${d.customer_name}`;
-            await window.setPickerValue('customerPicker', d.customer_id, custLabel, {
+            await window.setPickerValue('corporateCustomer', d.customer_id, custLabel, {
                 id: d.customer_id,
                 name: d.customer_name,
                 code: d.customer_code,
@@ -116,13 +226,20 @@ async function importFromCustomerOrder(orderId) {
             });
         }
 
-        if (d.destination_city_code && window.setPickerValue) {
-            await window.setPickerValue('destinationCity', d.destination_city_code, d.destination_city_name || d.destination_city_code);
+        if (d.destination_city_code) {
+            roState.destination_city_code = d.destination_city_code;
+            roState.destination_city_name = d.destination_city_name || d.destination_city_code;
+            if (window.setPickerValue) {
+                await window.setPickerValue('destinationCity', d.destination_city_code, d.destination_city_name || d.destination_city_code, {
+                    id: d.destination_city_code,
+                    name: d.destination_city_name || d.destination_city_code,
+                });
+            }
         }
 
-        const recNameEl = document.getElementById('recipientName');
-        const recPhoneEl = document.getElementById('recipientPhone');
-        const addrEl = document.getElementById('destinationAddress');
+        const recNameEl = document.querySelector('.drop-point-card .drop-recipient');
+        const recPhoneEl = document.querySelector('.drop-point-card .drop-phone');
+        const addrEl = document.querySelector('.drop-point-card .drop-address');
         const poRefEl = document.getElementById('poReference');
         const notesEl = document.getElementById('shipperNotes');
 
@@ -136,7 +253,7 @@ async function importFromCustomerOrder(orderId) {
         roState.recipient_phone = d.recipient_phone || '';
         roState.destination_address = d.delivery_address || '';
 
-        // 3. Populate Cargo Items Table
+        // 3. Populate Cargo Items Table (Step 3)
         const tbody = document.getElementById('productRowsBody');
         if (tbody) tbody.innerHTML = '';
         roState.items = [];
@@ -155,20 +272,36 @@ async function importFromCustomerOrder(orderId) {
             addProductToCargo(prodObj, parseInt(item.quantity) || 1);
         });
 
+        calculateCargoTotals();
+
+        // 4. Recommend Fleet Type & Check Route Pricing
         if (d.recommended_fleet_type_id) {
             roState.fleet_type_id = d.recommended_fleet_type_id;
         }
+        if (roState.origin_city_code && roState.destination_city_code) {
+            await fetchCarrierAndFleetOptions(false);
+        }
+
+        // 5. Show Imported PO Banner
+        const banner = document.getElementById('importedPoBanner');
+        const badgeNum = document.getElementById('importedPoBadgeNumber');
+        const badgeDetails = document.getElementById('importedPoBadgeDetails');
+        if (banner) banner.classList.remove('hidden');
+        if (badgeNum) badgeNum.textContent = d.order_number + (d.customer_po_number ? ` (PO: ${d.customer_po_number})` : '');
+        if (badgeDetails) {
+            badgeDetails.textContent = `Pembeli: ${d.customer_name} • Gudang: ${d.origin_warehouse?.name || '-'} • Tujuan: ${d.destination_city_name || d.destination_city_code} • ${d.total_weight_kg || 0} kg`;
+        }
 
         if (window.Alert) {
-            window.Alert.toast(`Pesanan ${d.order_number} berhasil diimpor ke Wizard Request Order!`, 'success');
+            window.Alert.toast(`PO ${d.order_number} berhasil dimuat ke Wizard RO!`, 'success');
         }
     } catch (err) {
         console.error('Import from customer order error:', err);
         if (window.Alert) {
-            window.Alert.error('Gagal Impor Pesanan', err.response?.data?.message || 'Tidak dapat memuat data prefill dari pesanan pelanggan.');
+            window.Alert.error('Gagal Impor PO', err.response?.data?.message || 'Tidak dapat memuat data prefill dari PO pelanggan.');
         }
     }
-}
+};
 
 // Bind Origin Warehouse Picker Selection
 function bindWarehousePicker() {
@@ -1031,6 +1164,7 @@ window.goToStep = async function(step) {
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const submitBtn = document.getElementById('submitBtn');
+    const draftBtn = document.getElementById('draftBtn');
 
     if (prevBtn) {
         if (step === 1) prevBtn.classList.add('hidden');
@@ -1045,6 +1179,11 @@ window.goToStep = async function(step) {
     if (submitBtn) {
         if (step === totalSteps) submitBtn.classList.remove('hidden');
         else submitBtn.classList.add('hidden');
+    }
+
+    if (draftBtn) {
+        if (step === totalSteps) draftBtn.classList.remove('hidden');
+        else draftBtn.classList.add('hidden');
     }
 
     currentStep = step;
@@ -1190,6 +1329,17 @@ function populateReviewStep() {
     const revWeight = document.getElementById('reviewWeight');
     const revCost = document.getElementById('reviewTotalCost');
 
+    const revPoRow = document.getElementById('reviewPoRow');
+    const revPoNum = document.getElementById('reviewPoNumber');
+    if (revPoRow && revPoNum) {
+        if (roState.customer_order_id && roState.customer_order_number) {
+            revPoRow.classList.remove('hidden');
+            revPoNum.innerText = roState.customer_order_number;
+        } else {
+            revPoRow.classList.add('hidden');
+        }
+    }
+
     if (revCustomer) {
         if (roState.customer_name) {
             const typeStr = roState.customer_type === 'distributor' ? 'Mitra Distribusi' : 'Pelanggan';
@@ -1209,14 +1359,20 @@ function populateReviewStep() {
 }
 
 // Submit Request Order
-window.submitRequestOrder = async function() {
+window.submitRequestOrder = async function(targetStatus = 'submitted') {
     const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<iconify-icon icon="solar:spinner-line" class="animate-spin text-base"></iconify-icon><span>Memproses RO...</span>';
+    const draftBtn = document.getElementById('draftBtn');
+    if (submitBtn) submitBtn.disabled = true;
+    if (draftBtn) draftBtn.disabled = true;
+
+    if (targetStatus === 'draft' && draftBtn) {
+        draftBtn.innerHTML = '<iconify-icon icon="solar:spinner-line" class="animate-spin text-base"></iconify-icon><span>Menyimpan Draft...</span>';
+    } else if (submitBtn) {
+        submitBtn.innerHTML = '<iconify-icon icon="solar:spinner-line" class="animate-spin text-base"></iconify-icon><span>Mengajukan RO...</span>';
     }
 
     const payload = {
+        status: targetStatus,
         customer_id: roState.customer_id || null,
         customer_order_id: roState.customer_order_id || null,
         distributor_id: roState.distributor_id || null,
@@ -1257,26 +1413,33 @@ window.submitRequestOrder = async function() {
 
     try {
         const res = await axios.post('/api/request-orders', payload);
+        const isDraft = targetStatus === 'draft';
         Swal.fire({
             icon: 'success',
-            title: 'Request Order Terbit!',
-            text: 'Order pemesanan armada truk berhasil dibuat dan diteruskan ke sistem logistik.',
+            title: isDraft ? 'Draft Disimpan!' : 'Request Order Diajukan!',
+            text: isDraft 
+                ? 'Order pemesanan armada berhasil disimpan sebagai draft dan dapat diedit kembali kapan saja sebelum diajukan.'
+                : 'Order pemesanan armada truk berhasil diajukan dan diteruskan ke sistem mitra logistik.',
             confirmButtonColor: '#053363'
         }).then(() => {
             window.location.href = '/request-orders';
         });
     } catch (err) {
         console.error('Submit Request Order error:', err);
-        const errMsg = err.response?.data?.message || 'Gagal membuat Request Order. Silakan periksa kembali data Anda.';
+        const errMsg = err.response?.data?.message || 'Gagal memproses Request Order. Silakan periksa kembali data Anda.';
         Swal.fire({
             icon: 'error',
-            title: 'Gagal Membuat RO',
+            title: targetStatus === 'draft' ? 'Gagal Menyimpan Draft' : 'Gagal Mengajukan RO',
             text: errMsg,
             confirmButtonColor: '#053363'
         });
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<iconify-icon icon="solar:check-circle-bold" class="text-base"></iconify-icon><span>Kirim Request Order Sekarang</span>';
+            submitBtn.innerHTML = '<iconify-icon icon="solar:check-circle-bold" class="text-base"></iconify-icon><span>Konfirmasi &amp; Ajukan RO</span>';
+        }
+        if (draftBtn) {
+            draftBtn.disabled = false;
+            draftBtn.innerHTML = '<iconify-icon icon="solar:diskette-bold" class="text-base text-slate-500"></iconify-icon><span>Simpan sebagai Draft</span>';
         }
     }
 };
