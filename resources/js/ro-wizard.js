@@ -8,6 +8,7 @@ window.availableWarehouses = [];
 
 const roState = {
     customer_id: null,
+    customer_order_id: null,
     distributor_id: null,
     customer_name: '',
     customer_code: '',
@@ -69,11 +70,105 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 6. Bind Product Picker search
     bindProductPickerSearch();
 
-    // 7. Pre-add 1 demo item row if empty
-    if (window.availableProducts.length > 0) {
+    // 7. Check if importing from an existing Customer Purchase Order (?from_order_id=...)
+    const fromOrderId = new URLSearchParams(window.location.search).get('from_order_id');
+    if (fromOrderId) {
+        await importFromCustomerOrder(fromOrderId);
+    } else if (window.availableProducts.length > 0) {
         addProductToCargo(window.availableProducts[0], 10);
     }
 });
+
+// Auto-import prefill data from confirmed Customer / Distributor Purchase Order
+async function importFromCustomerOrder(orderId) {
+    try {
+        const res = await axios.get(`/api/internal/orders/${orderId}/ro-prefill`);
+        const d = res.data?.data;
+        if (!d) return;
+
+        roState.customer_order_id = d.customer_order_id;
+        roState.customer_id = d.customer_id;
+        roState.distributor_id = d.distributor_id;
+        roState.customer_type = d.customer_type || 'customer';
+        roState.customer_name = d.customer_name || '';
+        roState.customer_code = d.customer_code || '';
+
+        // 1. Set Origin Warehouse
+        if (d.origin_warehouse_id && window.setPickerValue) {
+            const whLabel = d.origin_warehouse ? `${d.origin_warehouse.code || ''} - ${d.origin_warehouse.name}` : `Gudang #${d.origin_warehouse_id}`;
+            await window.setPickerValue('originWarehouse', d.origin_warehouse_id, whLabel, d.origin_warehouse);
+        }
+
+        // 2. Set Customer Picker & Delivery Coordinates
+        if (d.customer_id && window.setPickerValue) {
+            const custLabel = `${d.customer_code ? d.customer_code + ' - ' : ''}${d.customer_name}`;
+            await window.setPickerValue('customerPicker', d.customer_id, custLabel, {
+                id: d.customer_id,
+                name: d.customer_name,
+                code: d.customer_code,
+                type: d.customer_type,
+                distributor_id: d.distributor_id,
+                city_code: d.destination_city_code,
+                city_name: d.destination_city_name,
+                address: d.delivery_address,
+                pic_name: d.recipient_name,
+                phone: d.recipient_phone,
+            });
+        }
+
+        if (d.destination_city_code && window.setPickerValue) {
+            await window.setPickerValue('destinationCity', d.destination_city_code, d.destination_city_name || d.destination_city_code);
+        }
+
+        const recNameEl = document.getElementById('recipientName');
+        const recPhoneEl = document.getElementById('recipientPhone');
+        const addrEl = document.getElementById('destinationAddress');
+        const poRefEl = document.getElementById('poReference');
+        const notesEl = document.getElementById('shipperNotes');
+
+        if (recNameEl) recNameEl.value = d.recipient_name || '';
+        if (recPhoneEl) recPhoneEl.value = d.recipient_phone || '';
+        if (addrEl) addrEl.value = d.delivery_address || '';
+        if (poRefEl) poRefEl.value = d.customer_po_number || d.order_number || '';
+        if (notesEl && d.notes) notesEl.value = d.notes;
+
+        roState.recipient_name = d.recipient_name || '';
+        roState.recipient_phone = d.recipient_phone || '';
+        roState.destination_address = d.delivery_address || '';
+
+        // 3. Populate Cargo Items Table
+        const tbody = document.getElementById('productRowsBody');
+        if (tbody) tbody.innerHTML = '';
+        roState.items = [];
+
+        (d.items || []).forEach(item => {
+            const catalogProd = window.availableProducts.find(p => String(p.id) === String(item.product_id));
+            const prodObj = catalogProd || {
+                id: item.product_id,
+                code: item.product_code,
+                name: item.product_name,
+                weight: item.weight_kg,
+                weight_kg: item.weight_kg,
+                volume_cbm: item.volume_cbm,
+                default_price: item.unit_price,
+            };
+            addProductToCargo(prodObj, parseInt(item.quantity) || 1);
+        });
+
+        if (d.recommended_fleet_type_id) {
+            roState.fleet_type_id = d.recommended_fleet_type_id;
+        }
+
+        if (window.Alert) {
+            window.Alert.toast(`Pesanan ${d.order_number} berhasil diimpor ke Wizard Request Order!`, 'success');
+        }
+    } catch (err) {
+        console.error('Import from customer order error:', err);
+        if (window.Alert) {
+            window.Alert.error('Gagal Impor Pesanan', err.response?.data?.message || 'Tidak dapat memuat data prefill dari pesanan pelanggan.');
+        }
+    }
+}
 
 // Bind Origin Warehouse Picker Selection
 function bindWarehousePicker() {
@@ -1123,6 +1218,7 @@ window.submitRequestOrder = async function() {
 
     const payload = {
         customer_id: roState.customer_id || null,
+        customer_order_id: roState.customer_order_id || null,
         distributor_id: roState.distributor_id || null,
         order_date: roState.order_date,
         departure_date: roState.departure_date || new Date().toISOString().slice(0, 16),

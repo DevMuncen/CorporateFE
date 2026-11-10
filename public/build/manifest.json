@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-B0eLEvSY.css",
+    "file": "assets/app-V-rYR5Ll.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",
@@ -15,7 +15,7 @@
     "isEntry": true
   },
   "resources/js/ro-wizard.js": {
-    "file": "assets/ro-wizard-De9PWpzE.js",
+    "file": "assets/ro-wizard-DqF6LuVM.js",
     "name": "ro-wizard",
     "src": "resources/js/ro-wizard.js",
     "isEntry": true

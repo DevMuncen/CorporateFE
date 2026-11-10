@@ -51,7 +51,7 @@
                             <th class="py-3.5">Nama Produk</th>
                             <th class="py-3.5">Lokasi Gudang</th>
                             <th class="py-3.5 text-right">Stok Fisik</th>
-                            <th class="py-3.5 text-right">Teralokasi (RO)</th>
+                            <th class="py-3.5 text-right">Teralokasi (PO/RO)</th>
                             <th class="py-3.5 text-right">Stok Tersedia</th>
                             <th class="py-3.5 pr-6 text-center">Status</th>
                         </tr>

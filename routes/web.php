@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CorporateCodeController;
 use App\Http\Controllers\CorporateCustomerController;
+use App\Http\Controllers\CorporateCustomerOrderController;
 use App\Http\Controllers\CorporateDistributorController;
 use App\Http\Controllers\CorporateProductController;
 use App\Http\Controllers\CorporateUserController;
@@ -46,10 +47,13 @@ Route::middleware(['bff.auth'])->group(function () {
     Route::get('/distributors', fn() => redirect()->route('customers.index'));
 
     // Order Management & Request Order Wizard
+    Route::get('/orders', [CorporateCustomerOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/create', [CorporateCustomerOrderController::class, 'create'])->name('orders.create');
+    Route::get('/orders/{id}', [CorporateCustomerOrderController::class, 'show'])->name('orders.show');
     Route::get('/request-orders', [RequestOrderController::class, 'index'])->name('request-orders.index');
     Route::get('/request-orders/create', [RequestOrderController::class, 'create'])->name('request-orders.create');
     Route::get('/request-orders/{id}', [RequestOrderController::class, 'show'])->name('request-orders.show');
-    Route::get('/distributor-orders', [RequestOrderController::class, 'distributorOrdersIndex'])->name('distributor-orders.index');
+    Route::get('/distributor-orders', fn() => redirect()->route('orders.index'))->name('distributor-orders.index');
     Route::get('/waybills', [WaybillController::class, 'index'])->name('waybills.index');
     Route::get('/waybills/{id}', [WaybillController::class, 'show'])->name('waybills.show');
     Route::get('/waybills/{id}/print', [WaybillController::class, 'print'])->name('waybills.print');
@@ -119,6 +123,17 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::get('/distributors/{id}', [CorporateDistributorController::class, 'proxyShow']);
         Route::put('/distributors/{id}', [CorporateDistributorController::class, 'proxyUpdate']);
         Route::delete('/distributors/{id}', [CorporateDistributorController::class, 'proxyDestroy']);
+
+        // Customer & Distributor Purchase Orders
+        Route::get('/orders', [CorporateCustomerOrderController::class, 'proxyList']);
+        Route::get('/orders/form-dependencies', [CorporateCustomerOrderController::class, 'proxyFormDependencies']);
+        Route::post('/orders', [CorporateCustomerOrderController::class, 'proxyStore']);
+        Route::get('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyShow']);
+        Route::put('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyUpdate']);
+        Route::delete('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyDestroy']);
+        Route::post('/orders/{id}/confirm', [CorporateCustomerOrderController::class, 'proxyConfirm']);
+        Route::post('/orders/{id}/cancel', [CorporateCustomerOrderController::class, 'proxyCancel']);
+        Route::get('/orders/{id}/ro-prefill', [CorporateCustomerOrderController::class, 'proxyRoPrefill']);
 
         // Request Orders & Dynamic Pricing
         Route::get('/request-orders', [RequestOrderController::class, 'proxyList']);
@@ -255,6 +270,15 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::delete('/distributors/{id}', [CorporateDistributorController::class, 'proxyDestroy']);
 
         // Orders & Request Orders
+        Route::get('/orders', [CorporateCustomerOrderController::class, 'proxyList']);
+        Route::get('/orders/form-dependencies', [CorporateCustomerOrderController::class, 'proxyFormDependencies']);
+        Route::post('/orders', [CorporateCustomerOrderController::class, 'proxyStore']);
+        Route::get('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyShow']);
+        Route::put('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyUpdate']);
+        Route::delete('/orders/{id}', [CorporateCustomerOrderController::class, 'proxyDestroy']);
+        Route::post('/orders/{id}/confirm', [CorporateCustomerOrderController::class, 'proxyConfirm']);
+        Route::post('/orders/{id}/cancel', [CorporateCustomerOrderController::class, 'proxyCancel']);
+        Route::get('/orders/{id}/ro-prefill', [CorporateCustomerOrderController::class, 'proxyRoPrefill']);
         Route::get('/distributor-orders', [RequestOrderController::class, 'proxyDistributorOrders']);
         Route::get('/customer-orders', [RequestOrderController::class, 'proxyDistributorOrders']);
         Route::get('/request-orders', [RequestOrderController::class, 'proxyList']);
