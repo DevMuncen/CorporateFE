@@ -95,6 +95,10 @@
                     </tbody>
                 </table>
             </div>
+            <div class="px-6 py-3.5 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <span id="stocksPaginationInfo">Memuat...</span>
+                <div id="stocksPaginationControls" class="flex items-center gap-1.5"></div>
+            </div>
         </div>
 
     </div>
@@ -102,21 +106,26 @@
     @push('scripts')
     <script>
         let stockTimer = null;
+        let currentStockPage = 1;
         function debounceFetchStocks() {
             clearTimeout(stockTimer);
-            stockTimer = setTimeout(fetchStocks, 350);
+            stockTimer = setTimeout(() => fetchStocks(1), 350);
         }
 
-        async function fetchStocks() {
+        async function fetchStocks(page = 1) {
+            currentStockPage = page;
             const tbody = document.getElementById('stocksTableBody');
             const search = document.getElementById('stockSearch').value;
             const wh = document.getElementById('warehouseFilter').value;
 
             try {
                 const res = await axios.get('/api/inventory/stocks', {
-                    params: { search, warehouse_id: wh }
+                    params: { search, warehouse_id: wh, page, per_page: 50 }
                 });
-                const data = res.data?.data?.data || res.data?.data || [];
+                const paginator = res.data?.data;
+                const data = Array.isArray(paginator) ? paginator : (paginator?.data || []);
+                const meta = Array.isArray(paginator) ? null : paginator;
+                const offset = meta ? ((meta.current_page || 1) - 1) * (meta.per_page || 50) : 0;
 
                 if (!data.length) {
                     tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-400">Tidak ada data stok ditemukan.</td></tr>`;
@@ -125,6 +134,8 @@
                     document.getElementById('kpiAllocatedTotal').textContent = '0 unit';
                     document.getElementById('kpiAvailableTotal').textContent = '0';
                     document.getElementById('kpiLowCount').textContent = '';
+                    document.getElementById('stocksPaginationInfo').textContent = '0 data';
+                    document.getElementById('stocksPaginationControls').innerHTML = '';
                     return;
                 }
 
@@ -132,7 +143,7 @@
 
                 tbody.innerHTML = data.map((s, idx) => {
                     const phys = Number(s.quantity || 0);
-                    const alloc = Number(s.allocated_quantity || 0);
+                    const alloc = Number(s.reserved_quantity ?? s.allocated_quantity ?? 0);
                     const available = Math.max(0, phys - alloc);
                     const isLow = available <= (s.minimum_stock || 10);
 
@@ -143,7 +154,7 @@
 
                     return `
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td class="py-3.5 pl-6 font-bold text-slate-500">${idx + 1}</td>
+                            <td class="py-3.5 pl-6 font-bold text-slate-500">${offset + idx + 1}</td>
                             <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">${s.product?.sku || s.product?.code || s.sku || '-'}</td>
                             <td class="py-3.5 font-bold text-slate-800 dark:text-slate-100">${s.product?.name || s.product_name || 'Produk'}</td>
                             <td class="py-3.5 text-slate-600 dark:text-slate-300">${s.warehouse?.name || 'Gudang Pusat'}</td>
@@ -151,7 +162,7 @@
                             <td class="py-3.5 text-right text-amber-600 dark:text-amber-400 font-semibold">${alloc.toLocaleString('id-ID')} unit</td>
                             <td class="py-3.5 text-right font-black text-emerald-600 dark:text-emerald-400">${available.toLocaleString('id-ID')} unit</td>
                             <td class="py-3.5 pr-6 text-center">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isLow ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700'}">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isLow ? 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800'}">
                                     ${isLow ? 'Stok Menipis' : 'Aman'}
                                 </span>
                             </td>
@@ -159,11 +170,24 @@
                     `;
                 }).join('');
 
-                document.getElementById('kpiStockRows').textContent = data.length;
+                document.getElementById('kpiStockRows').textContent = meta?.total ?? data.length;
                 document.getElementById('kpiPhysicalTotal').textContent = sumPhys.toLocaleString('id-ID') + ' unit';
                 document.getElementById('kpiAllocatedTotal').textContent = sumAlloc.toLocaleString('id-ID') + ' unit';
                 document.getElementById('kpiAvailableTotal').textContent = sumAvail.toLocaleString('id-ID') + ' unit';
                 document.getElementById('kpiLowCount').textContent = lowCount > 0 ? `(${lowCount} SKU menipis)` : '';
+
+                const pInfo = document.getElementById('stocksPaginationInfo');
+                const pCtrl = document.getElementById('stocksPaginationControls');
+                if (meta && meta.last_page > 1) {
+                    pInfo.textContent = `Halaman ${meta.current_page} dari ${meta.last_page} (${meta.total} baris)`;
+                    pCtrl.innerHTML = `
+                        <button type="button" ${meta.current_page <= 1 ? 'disabled' : ''} onclick="fetchStocks(${meta.current_page - 1})" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700">Prev</button>
+                        <button type="button" ${meta.current_page >= meta.last_page ? 'disabled' : ''} onclick="fetchStocks(${meta.current_page + 1})" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700">Next</button>
+                    `;
+                } else {
+                    pInfo.textContent = `Menampilkan ${data.length} baris stok`;
+                    pCtrl.innerHTML = '';
+                }
             } catch (err) {
                 console.error('Fetch stocks error:', err);
                 tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-400">Gagal memuat saldo stok.</td></tr>`;

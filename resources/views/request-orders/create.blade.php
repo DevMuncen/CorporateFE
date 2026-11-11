@@ -377,25 +377,25 @@
                             <span>Rincian Tarif Kontrak Truk (Direct Route Truck Rate)</span>
                         </h4>
                         <span id="selectedFleetBadgeText" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300">
-                            Armada: CDE Box (Engkel)
+                            Armada: Belum Dipilih
                         </span>
                     </div>
                     
                     <div class="flex justify-between items-center text-slate-600 dark:text-slate-300">
                         <span>Tarif Sewa Armada Truk (Rate of Truck - Linehaul):</span>
-                        <span id="rateBaseDisplay" class="font-mono font-bold">Rp 3.500.000</span>
+                        <span id="rateBaseDisplay" class="font-mono font-bold">Rp 0</span>
                     </div>
                     <div class="flex justify-between items-center text-slate-600 dark:text-slate-300">
                         <span>Biaya Langsir &amp; Handling (Direct Bongkar Muat):</span>
-                        <span id="rateShuntingDisplay" class="font-mono font-bold">Rp 450.000</span>
+                        <span id="rateShuntingDisplay" class="font-mono font-bold">Rp 0</span>
                     </div>
                     <div class="flex justify-between items-center text-slate-600 dark:text-slate-300">
                         <span>Asuransi Muatan Barang (0.15%):</span>
-                        <span id="rateInsuranceDisplay" class="font-mono font-bold">Rp 5.250</span>
+                        <span id="rateInsuranceDisplay" class="font-mono font-bold">Rp 0</span>
                     </div>
                     <div class="pt-3 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center text-sm font-black text-slate-900 dark:text-white">
                         <span>Total Tarif Pengiriman Truk:</span>
-                        <span id="rateTotalDisplay" class="text-base text-blue-600 dark:text-blue-400 font-mono font-black">Rp 3.955.250</span>
+                        <span id="rateTotalDisplay" class="text-base text-blue-600 dark:text-blue-400 font-mono font-black">Rp 0</span>
                     </div>
                 </div>
             </div>

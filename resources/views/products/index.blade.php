@@ -219,10 +219,17 @@
                 const res = await axios.get('/api/products', {
                     params: { page, search, category_id: category }
                 });
-                const data = res.data?.data?.data || res.data?.data || [];
+                const paginator = res.data?.data;
+                const data = Array.isArray(paginator) ? paginator : (paginator?.data || []);
+                const meta = Array.isArray(paginator) ? null : paginator;
+                const offset = meta ? ((meta.current_page || 1) - 1) * (meta.per_page || 15) : 0;
 
                 if (!data.length) {
-                    tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-400">Tidak ada produk ditemukan.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" class="py-12 text-center text-slate-400">Tidak ada produk ditemukan.</td></tr>`;
+                    const pInfo = document.getElementById('paginationInfo');
+                    const pCtrl = document.getElementById('paginationControls');
+                    if (pInfo) pInfo.textContent = '0 produk';
+                    if (pCtrl) pCtrl.innerHTML = '';
                     return;
                 }
 
@@ -240,7 +247,7 @@
 
                     return `
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                        <td class="py-3.5 pl-6 font-bold text-slate-500">${idx + 1}</td>
+                        <td class="py-3.5 pl-6 font-bold text-slate-500">${offset + idx + 1}</td>
                         <td class="py-3.5 font-mono font-bold text-blue-600 dark:text-blue-400">${p.sku || p.code || '-'}</td>
                         <td class="py-3.5 font-bold text-slate-800 dark:text-slate-100">${p.name}</td>
                         <td class="py-3.5 text-slate-500">${categoryName}</td>
@@ -265,9 +272,24 @@
                     </tr>
                     `;
                 }).join('');
+
+                const pInfo = document.getElementById('paginationInfo');
+                const pCtrl = document.getElementById('paginationControls');
+                if (pInfo && pCtrl) {
+                    if (meta && meta.last_page > 1) {
+                        pInfo.textContent = `Halaman ${meta.current_page} dari ${meta.last_page} (${meta.total} produk)`;
+                        pCtrl.innerHTML = `
+                            <button type="button" ${meta.current_page <= 1 ? 'disabled' : ''} onclick="fetchProducts(${meta.current_page - 1})" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700">Prev</button>
+                            <button type="button" ${meta.current_page >= meta.last_page ? 'disabled' : ''} onclick="fetchProducts(${meta.current_page + 1})" class="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-700">Next</button>
+                        `;
+                    } else {
+                        pInfo.textContent = `Menampilkan ${data.length} produk`;
+                        pCtrl.innerHTML = '';
+                    }
+                }
             } catch (err) {
                 console.error('Fetch products error:', err);
-                tbody.innerHTML = `<tr><td colspan="8" class="py-12 text-center text-slate-400">Gagal memuat produk.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="py-12 text-center text-slate-400">Gagal memuat produk.</td></tr>`;
             }
         }
 

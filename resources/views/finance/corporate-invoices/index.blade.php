@@ -542,11 +542,11 @@
 
                             return `
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                                    <td class="py-2.5 pl-4 font-bold text-slate-500">${idx + 1}</td>
-                                    <td class="py-2.5 font-mono font-bold text-blue-600">${wb.waybill_number || ('WB-#' + d.waybill_id)}</td>
-                                    <td class="py-2.5 font-mono text-slate-600">${ro.order_number || ro.ro_number || (d.request_order_id ? ('RO-#' + d.request_order_id) : '-')}</td>
-                                    <td class="py-2.5 text-slate-600">${route}</td>
-                                    <td class="py-2.5 pr-4 text-right font-mono font-bold text-slate-800">Rp ${subtotal}</td>
+                                    <td class="py-2.5 pl-4 font-bold text-slate-500 dark:text-slate-400">${idx + 1}</td>
+                                    <td class="py-2.5 font-mono font-bold text-blue-600 dark:text-blue-400">${wb.waybill_number || ('WB-#' + d.waybill_id)}</td>
+                                    <td class="py-2.5 font-mono text-slate-600 dark:text-slate-300">${ro.order_number || ro.ro_number || (d.request_order_id ? ('RO-#' + d.request_order_id) : '-')}</td>
+                                    <td class="py-2.5 text-slate-600 dark:text-slate-300">${route}</td>
+                                    <td class="py-2.5 pr-4 text-right font-mono font-bold text-slate-800 dark:text-slate-100">Rp ${subtotal}</td>
                                 </tr>
                             `;
                         }).join('');
@@ -569,10 +569,10 @@
                                     </a>
                                 ` : ''}
                                 <div>
-                                    <div class="font-bold text-slate-800">Nominal: Rp ${parseFloat(p.amount || inv.total_amount || 0).toLocaleString('id-ID')}</div>
-                                    <div class="text-[11px] text-slate-500">Tgl: ${p.payment_date || '-'} | Metode: ${p.payment_method || 'Bank Transfer'}</div>
-                                    <div class="text-[11px] text-slate-500">Catatan: ${p.notes || '-'}</div>
-                                    <div class="text-[11px] font-bold ${isPaid || p.status === 2 ? 'text-emerald-600' : 'text-indigo-600'} mt-1">
+                                    <div class="font-bold text-slate-800 dark:text-slate-100">Nominal: Rp ${parseFloat(p.amount || inv.total_amount || 0).toLocaleString('id-ID')}</div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Tgl: ${p.payment_date || '-'} | Metode: ${p.payment_method || 'Bank Transfer'}</div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400">Catatan: ${p.notes || '-'}</div>
+                                    <div class="text-[11px] font-bold ${isPaid || p.status === 2 ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'} mt-1">
                                         Status: ${isPaid || p.status === 2 ? 'Pembayaran telah dikonfirmasi LUNAS oleh pihak transporter.' : 'Menunggu verifikasi pelunasan dari pihak transporter.'}
                                     </div>
                                 </div>

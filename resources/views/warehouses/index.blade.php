@@ -311,15 +311,17 @@
             }
 
             const isAct = document.getElementById('whStatus').value === '1';
-            const cityVal = document.getElementById('hidden-whCityPicker')?.value || document.getElementById('display-whCityPicker')?.value || '';
-            if (!cityVal) {
+            const cityCodeVal = document.getElementById('hidden-whCityPicker')?.value || '';
+            const cityNameVal = document.getElementById('display-whCityPicker')?.value || cityCodeVal;
+            if (!cityCodeVal && !cityNameVal) {
                 Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Silakan pilih Kota / Kabupaten' });
                 return;
             }
             const payload = {
                 code: document.getElementById('whCode').value,
                 name: document.getElementById('whName').value,
-                city: cityVal,
+                city: cityNameVal,
+                city_code: cityCodeVal || null,
                 pic_name: document.getElementById('whPic').value,
                 phone: document.getElementById('whPhone').value,
                 postal_code: document.getElementById('whPostal').value,

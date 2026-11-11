@@ -342,8 +342,8 @@
             if (stEl && stock !== null) {
                 const isShort = row.quantity > stock.available;
                 stEl.className = isShort
-                    ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700'
-                    : 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700';
+                    ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+                    : 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300';
                 stEl.textContent = `${stock.available} tersedia` + (isShort ? ' (Kurang!)' : '');
             }
         }
@@ -359,7 +359,7 @@
                 let stockBadge = '<span class="text-slate-400 text-[10px]">Pilih gudang &amp; produk</span>';
                 if (stock !== null) {
                     const isShort = row.quantity > stock.available;
-                    const cls = isShort ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700';
+                    const cls = isShort ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300';
                     stockBadge = `<span id="row-stock-${row.rowId}" class="px-2 py-0.5 rounded-full text-[10px] font-bold ${cls}">${stock.available} tersedia${isShort ? ' (Kurang!)' : ''}</span>`;
                 }
 

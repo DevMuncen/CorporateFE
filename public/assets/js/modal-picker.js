@@ -146,7 +146,7 @@ export class ModalPicker {
             const name = item.name || item.title || item.description || '-';
             const typeBadge = item.type === 'distributor' 
                 ? '<span class="inline-flex items-center gap-0.5 ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">Mitra Distribusi</span>'
-                : (item.type === 'customer' ? '<span class="inline-flex items-center gap-0.5 ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">Pelanggan B2B</span>' : '');
+                : (item.type === 'customer' ? '<span class="inline-flex items-center gap-0.5 ml-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">Pelanggan</span>' : '');
             const extra = item.city_name || item.city || item.province?.name || (item.weight ? `${item.weight} kg` : '') || (item.phone ? `Telp: ${item.phone}` : '') || '';
 
             const tr = document.createElement('tr');

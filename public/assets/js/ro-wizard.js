@@ -75,8 +75,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fromOrderId = new URLSearchParams(window.location.search).get('from_order_id');
     if (fromOrderId) {
         await importFromCustomerOrder(fromOrderId);
-    } else if (window.availableProducts.length > 0) {
-        addProductToCargo(window.availableProducts[0], 10);
     }
 });
 
@@ -357,13 +355,6 @@ function bindDestinationCityPicker() {
                 dropAddress.placeholder = `Alamat lengkap penerima di ${item.name}`;
             }
 
-            // If a registered customer is currently tied, sync this city to the customer profile
-            if (roState.customer_id && item.id) {
-                axios.put(`/api/customers/${roState.customer_id}`, {
-                    city_code: item.id
-                }).catch(err => console.warn('Customer city auto-sync warning:', err));
-            }
-
             if (roState.origin_city_code) {
                 fetchCarrierAndFleetOptions();
             }
@@ -471,23 +462,12 @@ async function fetchCargoProducts() {
     try {
         const res = await axios.get('/api/products?per_page=100');
         const raw = res.data?.data;
-        const list = Array.isArray(raw) ? raw : (raw?.data || []);
-        window.availableProducts = list.length > 0 ? list : getDefaultProducts();
+        window.availableProducts = Array.isArray(raw) ? raw : (raw?.data || []);
     } catch (err) {
-        console.warn('Fetch products warning, using defaults:', err);
-        window.availableProducts = getDefaultProducts();
+        console.warn('Fetch products warning:', err);
+        window.availableProducts = [];
     }
     renderProductPickerModal(window.availableProducts);
-}
-
-function getDefaultProducts() {
-    return [
-        { id: 1, name: 'Beras Premium 5kg', sku: 'SKU-BRG-001', weight: 5, base_price: 75000, uom: 'Sak' },
-        { id: 2, name: 'Minyak Goreng 2L', sku: 'SKU-BRG-002', weight: 2, base_price: 36000, uom: 'Pouch' },
-        { id: 3, name: 'Gula Pasir 1kg', sku: 'SKU-BRG-003', weight: 1, base_price: 18000, uom: 'Bungkus' },
-        { id: 4, name: 'Tepung Terigu 25kg', sku: 'SKU-BRG-004', weight: 25, base_price: 245000, uom: 'Karung' },
-        { id: 5, name: 'Mie Instan Dus (40 Pcs)', sku: 'SKU-BRG-005', weight: 4.5, base_price: 120000, uom: 'Karton' }
-    ];
 }
 
 // Render Product Modal Picker List
@@ -496,21 +476,22 @@ function renderProductPickerModal(products) {
     if (!tbody) return;
 
     if (!products || products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-4 text-center text-slate-400">Tidak ada produk ditemukan.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-4 text-center text-slate-400">Tidak ada produk ditemukan.</td></tr>';
         return;
     }
 
-    tbody.innerHTML = products.map(p => `
+    tbody.innerHTML = products.map((p, idx) => `
         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
+            <td class="px-4 py-3 whitespace-nowrap text-xs font-medium text-slate-400">${idx + 1}</td>
             <td class="px-4 py-3 whitespace-nowrap text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
                 <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700">${p.sku || p.code || 'SKU-' + p.id}</span>
             </td>
             <td class="px-4 py-3 text-xs text-slate-800 dark:text-slate-200">
                 <div class="font-bold">${p.name}</div>
-                <div class="text-[11px] text-slate-400">${p.uom || 'Unit'} • Rp ${Number(p.base_price || p.price || 0).toLocaleString('id-ID')}</div>
+                <div class="text-[11px] text-slate-400">${p.uom || 'Unit'} • Rp ${Number(p.base_price || p.default_price || p.price || 0).toLocaleString('id-ID')}</div>
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-bold text-slate-600 dark:text-slate-300">
-                ${Number(p.weight || p.weight_kg || 1).toLocaleString('id-ID')} kg
+                ${Number(p.weight ?? p.weight_kg ?? 0).toLocaleString('id-ID')} kg
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-end text-xs">
                 <button type="button" onclick="selectProductFromPicker(${p.id})" class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm transition-all">
@@ -579,8 +560,8 @@ function addProductToCargo(prod, defaultQty = 10) {
         }
     }
 
-    const rawWeight = parseFloat(prod.weight !== undefined && prod.weight !== null ? prod.weight : (prod.weight_kg ?? 1));
-    const weight = (rawWeight > 0) ? rawWeight : 5;
+    const rawWeight = parseFloat(prod.weight !== undefined && prod.weight !== null ? prod.weight : (prod.weight_kg ?? 0));
+    const weight = Number.isFinite(rawWeight) && rawWeight >= 0 ? rawWeight : 0;
     const lengthCm = parseFloat(prod.length || prod.length_cm || 0);
     const widthCm = parseFloat(prod.width || prod.width_cm || 0);
     const heightCm = parseFloat(prod.height || prod.height_cm || 0);
@@ -588,6 +569,7 @@ function addProductToCargo(prod, defaultQty = 10) {
         ? (lengthCm * widthCm * heightCm) / 1000000
         : (parseFloat(prod.volume_cbm || prod.volume || 0) || Math.max(0.01, parseFloat((weight / 250).toFixed(4))));
     const subtotalWeight = weight * defaultQty;
+    const rowNumber = tbody.querySelectorAll('tr').length + 1;
 
     const row = document.createElement('tr');
     row.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors';
@@ -596,6 +578,7 @@ function addProductToCargo(prod, defaultQty = 10) {
     row.dataset.cbm = cbmPerUnit;
 
     row.innerHTML = `
+        <td class="py-3 px-4 text-slate-400 font-medium row-seq">${rowNumber}</td>
         <td class="py-3 px-4">
             <div class="flex items-center gap-2">
                 <span class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-mono text-[11px] font-bold">
@@ -626,8 +609,15 @@ function addProductToCargo(prod, defaultQty = 10) {
 
 window.removeProductRow = function(btn) {
     const row = btn.closest('tr');
+    const tbody = document.getElementById('productRowsBody');
     if (row) {
         row.remove();
+        if (tbody) {
+            tbody.querySelectorAll('tr').forEach((r, idx) => {
+                const seq = r.querySelector('.row-seq');
+                if (seq) seq.textContent = idx + 1;
+            });
+        }
         calculateCargoTotals();
     }
 };
@@ -1259,16 +1249,10 @@ function validateStep(step) {
         roState.destination_city_code = cityId;
         roState.destination_address = addr;
     } else if (step === 3) {
+        calculateCargoTotals();
         if (!roState.items || roState.items.length === 0 || roState.total_qty <= 0) {
-            calculateCargoTotals();
-        }
-        if (!roState.items || roState.items.length === 0 || roState.total_qty <= 0) {
-            if (window.availableProducts && window.availableProducts.length > 0) {
-                addProductToCargo(window.availableProducts[0], 10);
-            } else {
-                window.Alert ? window.Alert.toast('Silakan pilih minimal 1 produk kargo SKU.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Muatan produk belum ditambahkan.' });
-                return false;
-            }
+            window.Alert ? window.Alert.toast('Silakan pilih minimal 1 produk kargo SKU.', 'error') : Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Muatan produk belum ditambahkan.' });
+            return false;
         }
     } else if (step === 4) {
         if (!roState.fleet_type_id || !roState.available_fleets || roState.available_fleets.length === 0) {
@@ -1378,19 +1362,19 @@ window.submitRequestOrder = async function(targetStatus = 'submitted') {
         distributor_id: roState.distributor_id || null,
         order_date: roState.order_date,
         departure_date: roState.departure_date || new Date().toISOString().slice(0, 16),
-        origin_warehouse_id: roState.origin_warehouse_id || 1,
-        origin_city_code: roState.origin_city_code || '31.71',
-        destination_city_code: roState.destination_city_code || '32.73',
-        fleet_type_id: roState.fleet_type_id,
-        cargo_type_id: 1,
+        origin_warehouse_id: roState.origin_warehouse_id || null,
+        origin_city_code: roState.origin_city_code || null,
+        destination_city_code: roState.destination_city_code || null,
+        fleet_type_id: roState.fleet_type_id || null,
+        cargo_type_id: roState.cargo_type_id || 1,
         total_weight: roState.total_weight || 0,
         total_weight_kg: roState.total_weight || 0,
         total_volume: roState.total_volume || 0,
         total_volume_cbm: roState.total_volume || 0,
-        logistic_id: roState.logistic_id || 1,
-        contract_id: roState.contract_id || 1,
+        logistic_id: roState.logistic_id || null,
+        contract_id: roState.contract_id || null,
         shipper_name: roState.shipper_pic || 'PIC Gudang',
-        shipper_phone: roState.shipper_phone || '08123456789',
+        shipper_phone: roState.shipper_phone || '-',
         notes: roState.shipper_notes || '',
         po_number: document.getElementById('poReference')?.value || '',
         delivery_points: [
@@ -1399,10 +1383,10 @@ window.submitRequestOrder = async function(targetStatus = 'submitted') {
                 distributor_id: roState.distributor_id || null,
                 stop_sequence: 1,
                 delivery_type: 1,
-                city_code: roState.destination_city_code || '32.73',
-                recipient_name: roState.recipient_name || 'Toko Mitra Grosir',
-                recipient_phone: roState.recipient_phone || '081987654321',
-                address: roState.destination_address || 'Alamat Penerima',
+                city_code: roState.destination_city_code || null,
+                recipient_name: roState.recipient_name || '',
+                recipient_phone: roState.recipient_phone || '',
+                address: roState.destination_address || '',
                 total_weight_kg: roState.total_weight || 0,
                 total_volume_cbm: roState.total_volume || 0,
                 items: roState.items

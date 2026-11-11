@@ -246,7 +246,8 @@
             // 2. Fetch Active Warehouses for Widget
             try {
                 const whRes = await axios.get('/api/warehouses');
-                const whList = whRes.data?.data || [];
+                const rawWh = whRes.data?.data;
+                const whList = Array.isArray(rawWh) ? rawWh : (rawWh?.data || []);
                 const whContainer = document.getElementById('dash-warehouses-list');
                 if (whContainer) {
                     if (!whList.length) {

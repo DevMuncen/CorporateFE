@@ -206,11 +206,11 @@
                 return;
             }
             tbody.innerHTML = rows.map((r, idx) => {
-                let badge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Surplus / Aman</span>';
+                let badge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800">Surplus / Aman</span>';
                 if (r.status === 'deficit') {
-                    badge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Defisit (Perlu Restock)</span>';
+                    badge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800">Defisit (Perlu Restock)</span>';
                 } else if (r.status === 'tight') {
-                    badge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Stok Ketat</span>';
+                    badge = '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800">Stok Ketat</span>';
                 }
 
                 const netCls = r.net_surplus_deficit < 0 ? 'text-rose-600 font-black' : 'text-emerald-600 font-bold';
@@ -230,7 +230,7 @@
                         <td class="py-3.5 text-right ${netCls}">${netSign}${Number(r.net_surplus_deficit).toLocaleString('id-ID')}</td>
                         <td class="py-3.5 text-center">${badge}</td>
                         <td class="py-3.5 pr-6 text-right">
-                            <a href="/inventory/item-ins" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold border border-emerald-200 text-[11px] inline-flex items-center gap-1">
+                            <a href="/inventory/item-ins" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 dark:hover:bg-emerald-900/50 font-bold border border-emerald-200 dark:border-emerald-800 text-[11px] inline-flex items-center gap-1">
                                 <iconify-icon icon="solar:import-bold"></iconify-icon> Restock
                             </a>
                         </td>

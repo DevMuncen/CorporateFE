@@ -172,9 +172,9 @@
         async function initDependencies() {
             try {
                 const [whRes, custRes, prodRes] = await Promise.all([
-                    axios.get('/api/warehouses'),
-                    axios.get('/api/customers'),
-                    axios.get('/api/products')
+                    axios.get('/api/warehouses?per_page=100'),
+                    axios.get('/api/customers?per_page=100'),
+                    axios.get('/api/products?per_page=100')
                 ]);
 
                 cachedWarehouses = whRes.data?.data?.data || whRes.data?.data || [];

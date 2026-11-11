@@ -191,16 +191,16 @@
 
                     if (o.status === 'draft') {
                         actionsHtml += `
-                            <a href="/orders/create?edit_id=${o.id}" class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-bold hover:bg-amber-100 transition-all">Edit</a>
+                            <a href="/orders/create?edit_id=${o.id}" class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800 dark:hover:bg-amber-900/50 font-bold transition-all">Edit</a>
                             <button type="button" onclick="confirmOrder(${o.id}, '${o.order_number}')" class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all">Konfirmasi</button>
-                            <button type="button" onclick="deleteOrder(${o.id}, '${o.order_number}')" class="px-2 py-1 rounded-lg text-rose-500 hover:bg-rose-50 font-bold transition-all"><iconify-icon icon="solar:trash-bin-trash-bold"></iconify-icon></button>
+                            <button type="button" onclick="deleteOrder(${o.id}, '${o.order_number}')" class="px-2 py-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 font-bold transition-all"><iconify-icon icon="solar:trash-bin-trash-bold"></iconify-icon></button>
                         `;
                     } else if (o.status === 'confirmed') {
                         actionsHtml += `
                             <a href="/request-orders/create?from_order_id=${o.id}" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-500 transition-all inline-flex items-center gap-1 shadow-sm">
                                 <iconify-icon icon="solar:truck-bold"></iconify-icon> Impor ke RO
                             </a>
-                            <button type="button" onclick="cancelOrder(${o.id}, '${o.order_number}')" class="px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 font-bold transition-all">Batal</button>
+                            <button type="button" onclick="cancelOrder(${o.id}, '${o.order_number}')" class="px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 font-bold transition-all">Batal</button>
                         `;
                     }
 
