@@ -10,10 +10,13 @@
                     Direktori pembeli grosir, jaringan retail, konsumen korporasi, dan mitra distribusi
                 </p>
             </div>
-            <button type="button" onclick="openCustomerModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/25 transition-all flex items-center gap-2 self-start sm:self-auto">
-                <iconify-icon icon="solar:add-circle-bold" class="text-base"></iconify-icon>
-                <span>+ Tambah Data</span>
-            </button>
+            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                <x-master-excel-actions entity="customers" title="Pelanggan & Mitra Distribusi" onImported="fetchCustomers()" />
+                <button type="button" onclick="openCustomerModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/25 transition-all flex items-center gap-2">
+                    <iconify-icon icon="solar:add-circle-bold" class="text-base"></iconify-icon>
+                    <span>+ Tambah Data</span>
+                </button>
+            </div>
         </div>
 
         <!-- Filter tabs -->

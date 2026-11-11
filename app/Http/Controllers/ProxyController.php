@@ -72,10 +72,39 @@ class ProxyController extends Controller
         $url = config('services.backend.url').$path;
         $allData = array_merge($request->except(array_keys($request->allFiles())), $data);
 
-        $response = $http->post($url, $allData);
+        $response = $http->timeout(120)->post($url, $allData);
         $contentType = $response->header('Content-Type') ?? 'application/json';
 
         return response($response->body(), $response->status())
             ->header('Content-Type', $contentType);
+    }
+
+    /**
+     * Helper to forward binary download requests (e.g. .xlsx Excel templates)
+     */
+    protected function forwardDownload(Request $request, string $path, array $query = [])
+    {
+        $token = session('api_token');
+        $tenantId = session('tenant_corporate_id', 1);
+
+        $http = Http::withHeaders([
+            'X-Tenant-Corporate-ID' => $tenantId,
+        ])->timeout(120);
+
+        if ($token) {
+            $http->withToken($token);
+        }
+
+        $url = config('services.backend.url').$path;
+        $response = $http->get($url, $query);
+
+        $res = response($response->body(), $response->status())
+            ->header('Content-Type', $response->header('Content-Type') ?? 'application/octet-stream');
+
+        if ($disposition = $response->header('Content-Disposition')) {
+            $res->header('Content-Disposition', $disposition);
+        }
+
+        return $res;
     }
 }

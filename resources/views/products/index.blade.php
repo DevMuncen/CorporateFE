@@ -11,7 +11,8 @@
                     Kelola data master barang, dimensi, berat, dan harga dasar korporasi
                 </p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <x-master-excel-actions entity="products" title="Katalog Produk SKU" onImported="fetchProducts()" />
                 <a href="/product-categories" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-all flex items-center gap-1.5 shadow-xs">
                     <iconify-icon icon="solar:folder-with-files-bold-duotone" class="text-base text-blue-600"></iconify-icon>
                     <span>Kategori Produk</span>

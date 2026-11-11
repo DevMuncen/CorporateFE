@@ -13,6 +13,7 @@ use App\Http\Controllers\CorporateWarehouseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DistributorInvoiceController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\MasterExcelProxyController;
 use App\Http\Controllers\RequestOrderController;
 use App\Http\Controllers\WaybillController;
 use Illuminate\Support\Facades\Route;
@@ -225,6 +226,10 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::get('/orders/{id}/ro-prefill', [CorporateCustomerOrderController::class, 'proxyRoPrefill']);
         Route::get('/inventory/stocks', [InventoryController::class, 'proxyStocks']);
         Route::get('/inventory/comparison', [InventoryController::class, 'proxyComparison']);
+
+        // Master Excel Template Download & Bulk Import
+        Route::get('/master-excel/{entity}/template', [MasterExcelProxyController::class, 'template']);
+        Route::post('/master-excel/{entity}/import', [MasterExcelProxyController::class, 'import']);
     });
 
     // Comprehensive API Proxies for Blade AJAX requests

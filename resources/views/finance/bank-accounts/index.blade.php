@@ -17,6 +17,7 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                    <x-master-excel-actions entity="bank-accounts" title="Rekening Bank & VA" onImported="corpBankApp.loadAccounts()" />
                     <button type="button" onclick="corpBankApp.loadAccounts()" class="!bg-white dark:!bg-slate-700 hover:!bg-slate-50 dark:hover:!bg-slate-600 !text-slate-700 dark:!text-slate-200 py-2 px-3.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold border border-slate-300 dark:border-slate-600 shadow-xs transition-colors">
                         <iconify-icon icon="solar:refresh-linear" class="text-base !text-slate-700 dark:!text-slate-200"></iconify-icon>
                         <span>{{ __('Refresh Data') }}</span>

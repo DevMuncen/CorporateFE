@@ -14,10 +14,13 @@
                     Pengelompokan jenis komoditas, bahan baku, dan barang jadi
                 </p>
             </div>
-            <button type="button" onclick="openCategoryModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/25 transition-all flex items-center gap-2 self-start sm:self-auto">
-                <iconify-icon icon="solar:add-circle-bold" class="text-base"></iconify-icon>
-                <span>+ Tambah Kategori</span>
-            </button>
+            <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                <x-master-excel-actions entity="product-categories" title="Kategori Produk" onImported="fetchCategories()" />
+                <button type="button" onclick="openCategoryModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-md shadow-blue-600/25 transition-all flex items-center gap-2">
+                    <iconify-icon icon="solar:add-circle-bold" class="text-base"></iconify-icon>
+                    <span>+ Tambah Kategori</span>
+                </button>
+            </div>
         </div>
 
         <!-- Table Card -->
