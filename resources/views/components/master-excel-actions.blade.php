@@ -247,6 +247,24 @@ window.MasterExcelModal = window.MasterExcelModal || (function () {
         el('mexGlobalAlert')?.classList.add('hidden');
     }
 
+    function notifyToast(msg, type = 'success') {
+        if (window.Alert && typeof window.Alert.toast === 'function') {
+            window.Alert.toast(msg, type);
+        } else if (typeof window.showToast === 'function') {
+            window.showToast(msg, type);
+        } else {
+            alert(msg);
+        }
+    }
+
+    function notifyError(title, msg) {
+        if (window.Alert && typeof window.Alert.error === 'function') {
+            window.Alert.error(title, msg);
+        } else {
+            alert(`${title}: ${msg}`);
+        }
+    }
+
     async function download(entity, includeExisting, baseUrl, btn) {
         const origHtml = btn ? btn.innerHTML : '';
         if (btn) {
@@ -262,7 +280,7 @@ window.MasterExcelModal = window.MasterExcelModal || (function () {
                     const j = await res.json();
                     errMsg = j.message || errMsg;
                 } catch (_) {}
-                alert(errMsg);
+                notifyError('Gagal Unduh Template', errMsg);
                 return;
             }
             const blob = await res.blob();
@@ -280,7 +298,7 @@ window.MasterExcelModal = window.MasterExcelModal || (function () {
             link.remove();
             setTimeout(() => URL.revokeObjectURL(link.href), 5000);
         } catch (err) {
-            alert('Gagal mengunduh template: ' + (err?.message || 'Koneksi terputus'));
+            notifyError('Koneksi Gagal', err?.message || 'Koneksi terputus saat mengunduh template.');
         } finally {
             if (btn) {
                 btn.disabled = false;
@@ -398,11 +416,7 @@ window.MasterExcelModal = window.MasterExcelModal || (function () {
                 const c = summary.created_count || 0;
                 const u = summary.updated_count || 0;
                 close();
-                if (typeof window.showToast === 'function') {
-                    window.showToast(`Import ${state.title} berhasil: ${c} ditambah, ${u} diupdate.`, 'success');
-                } else {
-                    alert(`Import ${state.title} berhasil!\nDitambah: ${c}\nDiupdate: ${u}`);
-                }
+                notifyToast(`Import ${state.title} berhasil: ${c} ditambah, ${u} diupdate.`, 'success');
                 if (state.onImported) {
                     try {
                         new Function(state.onImported)();
