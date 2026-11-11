@@ -20,6 +20,15 @@ window.Alert = {
         });
     },
 
+    warning: (title, message = '') => {
+        return Swal.fire({
+            icon: 'warning',
+            title: title,
+            text: message,
+            confirmButtonColor: '#053363'
+        });
+    },
+
     confirm: (title, message = '', confirmText = 'Ya, lanjutkan') => {
         return Swal.fire({
             title: title,
