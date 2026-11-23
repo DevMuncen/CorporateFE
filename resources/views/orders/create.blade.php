@@ -59,10 +59,14 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Gudang Pemenuhan Asal *</label>
-                        <select id="originWarehouseId" required onchange="refreshStockIndicators()" class="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold">
-                            <option value="">-- Memuat Gudang Asal --</option>
-                        </select>
+                        <x-modal-picker
+                            id="originWarehousePicker"
+                            name="origin_warehouse_id"
+                            label="Gudang Pemenuhan Asal"
+                            url="/api/warehouses"
+                            required="true"
+                            placeholder="Pilih Gudang Pemenuhan Asal..."
+                        />
                     </div>
                 </div>
 
@@ -105,7 +109,7 @@
                             <p class="text-[11px] text-slate-400">Stok tersedia di gudang asal ditampilkan secara otomatis</p>
                         </div>
                     </div>
-                    <button type="button" onclick="addItemRow()" class="px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold transition-all flex items-center gap-1.5">
+                    <button type="button" onclick="openPoProductPicker(null)" class="px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-300 hover:bg-blue-100 text-xs font-bold transition-all flex items-center gap-1.5">
                         <iconify-icon icon="solar:add-circle-bold"></iconify-icon> Tambah Barang
                     </button>
                 </div>
@@ -177,6 +181,43 @@
         </form>
     </div>
 
+    <!-- Product Modal Picker for PO -->
+    <div id="modal-po-product-picker" class="fixed inset-0 z-[100] items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs" style="display: none;" onclick="closePoProductPicker()">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 relative z-10 max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
+                <div>
+                    <h3 class="text-sm font-black text-slate-900 dark:text-white">Pilih Produk SKU</h3>
+                    <p class="text-[11px] text-slate-400">Cari berdasarkan kode SKU atau nama barang, lalu klik Pilih</p>
+                </div>
+                <button type="button" onclick="closePoProductPicker()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    <iconify-icon icon="solar:close-circle-bold" class="text-xl"></iconify-icon>
+                </button>
+            </div>
+            <div class="mb-4">
+                <div class="relative">
+                    <input type="text" id="search-po-product-picker" oninput="filterPoProductPicker(this.value)" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none text-slate-800 dark:text-slate-100" placeholder="Ketik SKU atau nama produk...">
+                    <iconify-icon icon="solar:rounded-magnifer-linear" class="absolute left-3 top-3 text-slate-400 text-sm"></iconify-icon>
+                </div>
+            </div>
+            <div class="overflow-y-auto overflow-x-auto rounded-xl border border-slate-100 dark:border-slate-700 flex-1 max-h-80">
+                <table class="w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-700">
+                    <thead class="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10">
+                        <tr>
+                            <th scope="col" class="px-4 py-2.5 w-10">No</th>
+                            <th scope="col" class="px-4 py-2.5">SKU / Kode</th>
+                            <th scope="col" class="px-4 py-2.5">Nama Produk</th>
+                            <th scope="col" class="px-4 py-2.5 text-right">Harga Dasar</th>
+                            <th scope="col" class="px-4 py-2.5 text-center">Stok</th>
+                            <th scope="col" class="px-4 py-2.5 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-po-product-picker" class="divide-y divide-slate-100 dark:divide-slate-700/60 bg-white dark:bg-slate-800">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
         let deps = { customers: [], warehouses: [], products: [], stock_map: {} };
@@ -188,12 +229,15 @@
                 const res = await axios.get('/api/internal/orders/form-dependencies');
                 deps = res.data?.data || { customers: [], warehouses: [], products: [], stock_map: {} };
 
-                const whSelect = document.getElementById('originWarehouseId');
-                whSelect.innerHTML = '<option value="">-- Pilih Gudang Asal --</option>' +
-                    deps.warehouses.map(w => `<option value="${w.id}">${w.name} (${w.code})</option>`).join('');
+                const whPickerHidden = document.getElementById('hidden-originWarehousePicker');
+                if (whPickerHidden) {
+                    whPickerHidden.addEventListener('change', () => {
+                        refreshStockIndicators();
+                    });
+                }
 
-                if (deps.warehouses.length === 1) {
-                    whSelect.value = deps.warehouses[0].id;
+                if (deps.warehouses.length === 1 && window.setPickerValue) {
+                    window.setPickerValue('originWarehousePicker', deps.warehouses[0].id, `${deps.warehouses[0].name} (${deps.warehouses[0].code})`, deps.warehouses[0]);
                 }
 
                 // Listen to customer selection
@@ -252,7 +296,12 @@
                 document.getElementById('customerPoNumber').value = order.customer_po_number || '';
                 document.getElementById('orderDate').value = (order.order_date || '').substring(0, 10);
                 document.getElementById('expectedDeliveryDate').value = (order.expected_delivery_date || '').substring(0, 10);
-                document.getElementById('originWarehouseId').value = order.origin_warehouse_id || '';
+                if (window.setPickerValue && order.origin_warehouse) {
+                    window.setPickerValue('originWarehousePicker', order.origin_warehouse_id, `${order.origin_warehouse.name} (${order.origin_warehouse.code || 'Gudang'})`, order.origin_warehouse);
+                } else if (window.setPickerValue && order.origin_warehouse_id) {
+                    const foundWh = (deps.warehouses || []).find(w => String(w.id) === String(order.origin_warehouse_id));
+                    window.setPickerValue('originWarehousePicker', order.origin_warehouse_id, foundWh ? `${foundWh.name} (${foundWh.code})` : `Gudang #${order.origin_warehouse_id}`, foundWh);
+                }
                 document.getElementById('recipientName').value = order.recipient_name || '';
                 document.getElementById('recipientPhone').value = order.recipient_phone || '';
                 document.getElementById('deliveryAddress').value = order.delivery_address || '';
@@ -320,7 +369,7 @@
         }
 
         function getStockForProduct(prodId) {
-            const whId = document.getElementById('originWarehouseId')?.value;
+            const whId = document.getElementById('hidden-originWarehousePicker')?.value || document.getElementById('originWarehouseId')?.value;
             if (!whId || !prodId) return null;
             return deps.stock_map?.[whId]?.[prodId] || { physical: 0, reserved: 0, available: 0 };
         }
@@ -348,12 +397,103 @@
             }
         }
 
+        function escapeHtmlPo(val) {
+            return String(val ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        let activePickerRowId = null;
+
+        function openPoProductPicker(rowId = null) {
+            activePickerRowId = rowId;
+            const searchEl = document.getElementById('search-po-product-picker');
+            if (searchEl) searchEl.value = '';
+            renderPoProductPickerList(deps.products || []);
+            const modalEl = document.getElementById('modal-po-product-picker');
+            if (modalEl) {
+                modalEl.style.display = 'flex';
+                modalEl.classList.remove('hidden');
+                setTimeout(() => searchEl && searchEl.focus(), 50);
+            }
+        }
+
+        function closePoProductPicker() {
+            const modalEl = document.getElementById('modal-po-product-picker');
+            if (modalEl) {
+                modalEl.style.display = 'none';
+                modalEl.classList.add('hidden');
+            }
+        }
+
+        function filterPoProductPicker(query) {
+            const q = String(query || '').trim().toLowerCase();
+            const list = (deps.products || []).filter(p => {
+                const code = String(p.code || p.sku || '').toLowerCase();
+                const name = String(p.name || '').toLowerCase();
+                return !q || code.includes(q) || name.includes(q);
+            });
+            renderPoProductPickerList(list);
+        }
+
+        function renderPoProductPickerList(list) {
+            const tbody = document.getElementById('tbody-po-product-picker');
+            if (!tbody) return;
+            if (!list || list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-slate-400">Tidak ada produk SKU ditemukan.</td></tr>';
+                return;
+            }
+            const whSelected = Boolean(document.getElementById('hidden-originWarehousePicker')?.value || document.getElementById('originWarehouseId')?.value);
+            tbody.innerHTML = list.map((p, idx) => {
+                const stock = whSelected ? getStockForProduct(p.id) : null;
+                const stockHtml = stock !== null
+                    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${stock.available > 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'}">${stock.available}</span>`
+                    : '<span class="text-slate-400 text-[10px]">-</span>';
+                const price = Number(p.default_price || 0);
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors">
+                        <td class="px-4 py-2.5 text-xs text-slate-400">${idx + 1}</td>
+                        <td class="px-4 py-2.5 whitespace-nowrap text-xs font-mono font-bold text-slate-700 dark:text-slate-200">
+                            <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700">${escapeHtmlPo(p.code || p.sku || ('SKU-' + p.id))}</span>
+                        </td>
+                        <td class="px-4 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-100">${escapeHtmlPo(p.name)}</td>
+                        <td class="px-4 py-2.5 text-right text-xs font-mono text-slate-700 dark:text-slate-200">Rp ${price.toLocaleString('id-ID')}</td>
+                        <td class="px-4 py-2.5 text-center">${stockHtml}</td>
+                        <td class="px-4 py-2.5 text-end">
+                            <button type="button" onclick="selectPoProduct(${p.id})" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition-colors shadow-xs">
+                                Pilih
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function selectPoProduct(prodId) {
+            const prod = (deps.products || []).find(p => String(p.id) === String(prodId));
+            if (!prod) return;
+
+            if (activePickerRowId !== null) {
+                onProductChange(activePickerRowId, prod.id);
+            } else {
+                const emptyFirst = itemRows.length === 1 && !itemRows[0].product_id;
+                if (emptyFirst) {
+                    onProductChange(itemRows[0].rowId, prod.id);
+                } else {
+                    addItemRow({
+                        product_id: prod.id,
+                        quantity: 1,
+                        unit_price: Number(prod.default_price || 0),
+                        discount_amount: 0,
+                    });
+                }
+            }
+            closePoProductPicker();
+        }
+
         function renderItemsTable() {
             const tbody = document.getElementById('orderItemsBody');
             tbody.innerHTML = itemRows.map(row => {
-                const options = deps.products.map(p =>
-                    `<option value="${p.id}" ${String(row.product_id) === String(p.id) ? 'selected' : ''}>${p.code} - ${p.name}</option>`
-                ).join('');
+                const selectedProd = (deps.products || []).find(p => String(p.id) === String(row.product_id));
+                const displayText = selectedProd ? `${selectedProd.code} - ${selectedProd.name}` : '';
 
                 const stock = getStockForProduct(row.product_id);
                 let stockBadge = '<span class="text-slate-400 text-[10px]">Pilih gudang &amp; produk</span>';
@@ -368,10 +508,12 @@
                 return `
                     <tr>
                         <td class="py-2.5 pl-3">
-                            <select onchange="onProductChange(${row.rowId}, this.value)" class="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold">
-                                <option value="">-- Pilih Produk SKU --</option>
-                                ${options}
-                            </select>
+                            <div class="flex items-center gap-1.5">
+                                <input type="text" readonly value="${escapeHtmlPo(displayText)}" placeholder="-- Pilih Produk SKU --" onclick="openPoProductPicker(${row.rowId})" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 placeholder:font-normal cursor-pointer focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                                <button type="button" onclick="openPoProductPicker(${row.rowId})" title="Cari Produk SKU" class="px-2.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl flex items-center justify-center transition-colors shrink-0">
+                                    <iconify-icon icon="solar:rounded-magnifer-linear" class="text-sm"></iconify-icon>
+                                </button>
+                            </div>
                         </td>
                         <td class="py-2.5 text-center">${stockBadge}</td>
                         <td class="py-2.5">
@@ -432,7 +574,7 @@
 
         async function submitOrder(submitAction) {
             const customerId = document.getElementById('hidden-orderCustomerPicker')?.value;
-            const originWhId = document.getElementById('originWarehouseId')?.value;
+            const originWhId = document.getElementById('hidden-originWarehousePicker')?.value || document.getElementById('originWarehouseId')?.value;
             const destCityCode = document.getElementById('hidden-orderDestCityPicker')?.value;
 
             if (!customerId) {

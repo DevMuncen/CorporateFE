@@ -12,7 +12,7 @@
                 <div>
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30 text-xs font-semibold mb-3 backdrop-blur-md">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Corporate Portal Port 8004 &bull; Backend 8001 Connected
+                        Corporate Merchant Portal &bull; Live
                     </div>
                     <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white mb-2" style="color: #ffffff !important;">
                         Selamat Datang, {{ session('user_name', 'Corporate Merchant') }} &#128075;

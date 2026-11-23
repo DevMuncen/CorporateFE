@@ -154,10 +154,14 @@
                 <div class="p-6 overflow-y-auto space-y-5 flex-1">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="lg:col-span-2">
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Pelanggan / Distributor *</label>
-                            <select id="createInvDistributorId" required class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
-                                <option value="">Pilih Pelanggan / Distributor...</option>
-                            </select>
+                            <x-modal-picker
+                                id="createInvDistributorPicker"
+                                name="distributor_id"
+                                label="Pelanggan / Distributor"
+                                url="/api/customers"
+                                required="true"
+                                placeholder="Pilih Pelanggan / Distributor..."
+                            />
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal Faktur *</label>
@@ -639,6 +643,10 @@
                 document.getElementById('createInvDate').value = today.toISOString().split('T')[0];
                 document.getElementById('createInvDueDate').value = due.toISOString().split('T')[0];
                 document.getElementById('createInvStatus').value = '1';
+                const distH = document.getElementById('hidden-createInvDistributorPicker');
+                const distD = document.getElementById('display-createInvDistributorPicker');
+                if (distH) distH.value = '';
+                if (distD) distD.value = '';
                 document.getElementById('createInvItemsBody').innerHTML = '';
                 this.addCreateItemRow();
                 this.recalcCreateTotals();
@@ -742,7 +750,7 @@
 
             async submitCreateInvoice(e) {
                 e.preventDefault();
-                const distId = document.getElementById('createInvDistributorId').value;
+                const distId = document.getElementById('hidden-createInvDistributorPicker')?.value || document.getElementById('createInvDistributorId')?.value;
                 if (!distId) {
                     Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Silakan pilih Pelanggan / Distributor.' });
                     return;

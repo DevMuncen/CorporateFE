@@ -252,16 +252,16 @@ window.MasterExcelModal = window.MasterExcelModal || (function () {
             window.Alert.toast(msg, type);
         } else if (typeof window.showToast === 'function') {
             window.showToast(msg, type);
-        } else {
-            alert(msg);
+        } else if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: type, title: msg, toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
         }
     }
 
     function notifyError(title, msg) {
         if (window.Alert && typeof window.Alert.error === 'function') {
             window.Alert.error(title, msg);
-        } else {
-            alert(`${title}: ${msg}`);
+        } else if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'error', title: title, text: msg, confirmButtonColor: '#2563eb' });
         }
     }
 

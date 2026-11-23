@@ -242,6 +242,17 @@
             @endif
           </a>
         </li>
+        <li class="sidebar-item">
+          <a class="sidebar-link flex items-center justify-between py-2.5 px-3.5 rounded-xl text-sm font-semibold transition-all {{ request()->is('integrations*') ? 'active activemenu bg-gradient-to-r from-blue-900 to-indigo-900 text-white shadow-md shadow-blue-900/25' : 'text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400' }}" href="/integrations">
+            <div class="flex items-center gap-3">
+              <iconify-icon icon="solar:widget-add-bold-duotone" class="shrink-0 text-xl {{ request()->is('integrations*') ? 'text-white' : 'text-amber-500 dark:text-amber-400' }}"></iconify-icon>
+              <span class="hide-menu shrink-0 {{ request()->is('integrations*') ? '!text-white font-bold' : '' }}">{{ __('Integrasi & External API') }}</span>
+            </div>
+            @if(request()->is('integrations*'))
+              <span class="w-1.5 h-1.5 rounded-full bg-white/90"></span>
+            @endif
+          </a>
+        </li>
       </div>
       @endif
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\CorporateVendorController;
 use App\Http\Controllers\CorporateWarehouseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DistributorInvoiceController;
+use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\MasterExcelProxyController;
 use App\Http\Controllers\RequestOrderController;
@@ -72,6 +73,9 @@ Route::middleware(['bff.auth'])->group(function () {
 
     // User Management (Corporate PIC Admin & Team)
     Route::get('/users', [CorporateUserController::class, 'index'])->name('users.index');
+
+    // Integrations & External Gateway Portal
+    Route::get('/integrations', [IntegrationController::class, 'index'])->name('integrations.index');
 
     // Internal API Proxies (BFF)
     Route::prefix('api/internal/corporate')->group(function () {
@@ -161,6 +165,20 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::post('/item-ins', [InventoryController::class, 'proxyStoreItemIn']);
         Route::get('/item-outs', [InventoryController::class, 'proxyItemOuts']);
         Route::post('/item-outs', [InventoryController::class, 'proxyStoreItemOut']);
+        Route::get('/inventory/item-ins', [InventoryController::class, 'proxyItemIns']);
+        Route::post('/inventory/item-ins', [InventoryController::class, 'proxyStoreItemIn']);
+        Route::get('/inventory/item-outs', [InventoryController::class, 'proxyItemOuts']);
+        Route::post('/inventory/item-outs', [InventoryController::class, 'proxyStoreItemOut']);
+        Route::get('/inventory/stocks', [InventoryController::class, 'proxyStocks']);
+        Route::get('/inventory/comparison', [InventoryController::class, 'proxyComparison']);
+        Route::get('/inventory/item-ins', [InventoryController::class, 'proxyItemIns']);
+        Route::post('/inventory/item-ins', [InventoryController::class, 'proxyStoreItemIn']);
+        Route::get('/inventory/item-outs', [InventoryController::class, 'proxyItemOuts']);
+        Route::post('/inventory/item-outs', [InventoryController::class, 'proxyStoreItemOut']);
+        Route::get('/item-ins', [InventoryController::class, 'proxyItemIns']);
+        Route::post('/item-ins', [InventoryController::class, 'proxyStoreItemIn']);
+        Route::get('/item-outs', [InventoryController::class, 'proxyItemOuts']);
+        Route::post('/item-outs', [InventoryController::class, 'proxyStoreItemOut']);
 
         // Finance & Invoices
         Route::get('/finance/distributor-invoices', [DistributorInvoiceController::class, 'proxyList']);
@@ -205,6 +223,29 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::get('/master/cargo-types', [CorporateProductController::class, 'proxyCargoTypes']);
         Route::get('/master/logistic-vendors', [RequestOrderController::class, 'proxyLogisticVendors']);
         Route::get('/master/cities', [CorporateWarehouseController::class, 'proxyCities']);
+
+        // Integrations & External API
+        Route::prefix('integrations')->group(function () {
+            Route::get('apps/check-code', [IntegrationController::class, 'proxyAppsCheckCode']);
+            Route::get('apps', [IntegrationController::class, 'proxyAppsList']);
+            Route::post('apps', [IntegrationController::class, 'proxyAppsStore']);
+            Route::get('apps/{id}', [IntegrationController::class, 'proxyAppsShow']);
+            Route::put('apps/{id}', [IntegrationController::class, 'proxyAppsUpdate']);
+            Route::post('apps/{id}/rotate-secret', [IntegrationController::class, 'proxyAppsRotateSecret']);
+            Route::post('apps/{id}/status', [IntegrationController::class, 'proxyAppsSetStatus']);
+            Route::delete('apps/{id}', [IntegrationController::class, 'proxyAppsDestroy']);
+
+            Route::get('apps/{appId}/webhooks', [IntegrationController::class, 'proxyWebhooksList']);
+            Route::post('apps/{appId}/webhooks', [IntegrationController::class, 'proxyWebhooksStore']);
+            Route::post('apps/{appId}/webhooks/{webhookId}/ping', [IntegrationController::class, 'proxyWebhooksPing']);
+            Route::post('apps/{appId}/webhooks/{webhookId}/reset-circuit', [IntegrationController::class, 'proxyWebhooksResetCircuit']);
+
+            Route::get('logs/inbound', [IntegrationController::class, 'proxyLogsInbound']);
+            Route::get('logs/outbound', [IntegrationController::class, 'proxyLogsOutbound']);
+            Route::post('logs/outbound/{logId}/retry', [IntegrationController::class, 'proxyOutboundRetry']);
+            Route::post('logs/outbound/retry-bulk', [IntegrationController::class, 'proxyOutboundRetryBulk']);
+            Route::get('mappings', [IntegrationController::class, 'proxyMappingsList']);
+        });
     });
 
     // Frontend internal aliases
@@ -226,6 +267,14 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::get('/orders/{id}/ro-prefill', [CorporateCustomerOrderController::class, 'proxyRoPrefill']);
         Route::get('/inventory/stocks', [InventoryController::class, 'proxyStocks']);
         Route::get('/inventory/comparison', [InventoryController::class, 'proxyComparison']);
+        Route::get('/inventory/item-ins', [InventoryController::class, 'proxyItemIns']);
+        Route::post('/inventory/item-ins', [InventoryController::class, 'proxyStoreItemIn']);
+        Route::get('/inventory/item-outs', [InventoryController::class, 'proxyItemOuts']);
+        Route::post('/inventory/item-outs', [InventoryController::class, 'proxyStoreItemOut']);
+        Route::get('/item-ins', [InventoryController::class, 'proxyItemIns']);
+        Route::post('/item-ins', [InventoryController::class, 'proxyStoreItemIn']);
+        Route::get('/item-outs', [InventoryController::class, 'proxyItemOuts']);
+        Route::post('/item-outs', [InventoryController::class, 'proxyStoreItemOut']);
 
         // Master Excel Template Download & Bulk Import
         Route::get('/master-excel/{entity}/template', [MasterExcelProxyController::class, 'template']);
@@ -348,6 +397,29 @@ Route::middleware(['bff.auth'])->group(function () {
         Route::get('/master/cargo-types', [CorporateProductController::class, 'proxyCargoTypes']);
         Route::get('/master/logistic-vendors', [RequestOrderController::class, 'proxyLogisticVendors']);
         Route::get('/master/cities', [CorporateWarehouseController::class, 'proxyCities']);
+
+        // Integrations & External API
+        Route::prefix('integrations')->group(function () {
+            Route::get('apps/check-code', [IntegrationController::class, 'proxyAppsCheckCode']);
+            Route::get('apps', [IntegrationController::class, 'proxyAppsList']);
+            Route::post('apps', [IntegrationController::class, 'proxyAppsStore']);
+            Route::get('apps/{id}', [IntegrationController::class, 'proxyAppsShow']);
+            Route::put('apps/{id}', [IntegrationController::class, 'proxyAppsUpdate']);
+            Route::post('apps/{id}/rotate-secret', [IntegrationController::class, 'proxyAppsRotateSecret']);
+            Route::post('apps/{id}/status', [IntegrationController::class, 'proxyAppsSetStatus']);
+            Route::delete('apps/{id}', [IntegrationController::class, 'proxyAppsDestroy']);
+
+            Route::get('apps/{appId}/webhooks', [IntegrationController::class, 'proxyWebhooksList']);
+            Route::post('apps/{appId}/webhooks', [IntegrationController::class, 'proxyWebhooksStore']);
+            Route::post('apps/{appId}/webhooks/{webhookId}/ping', [IntegrationController::class, 'proxyWebhooksPing']);
+            Route::post('apps/{appId}/webhooks/{webhookId}/reset-circuit', [IntegrationController::class, 'proxyWebhooksResetCircuit']);
+
+            Route::get('logs/inbound', [IntegrationController::class, 'proxyLogsInbound']);
+            Route::get('logs/outbound', [IntegrationController::class, 'proxyLogsOutbound']);
+            Route::post('logs/outbound/{logId}/retry', [IntegrationController::class, 'proxyOutboundRetry']);
+            Route::post('logs/outbound/retry-bulk', [IntegrationController::class, 'proxyOutboundRetryBulk']);
+            Route::get('mappings', [IntegrationController::class, 'proxyMappingsList']);
+        });
         Route::get('/wilayah/kota', [CorporateWarehouseController::class, 'proxyCities']);
     });
 });
