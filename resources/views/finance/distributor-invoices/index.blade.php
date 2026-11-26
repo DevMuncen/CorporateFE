@@ -158,7 +158,7 @@
                                 id="createInvDistributorPicker"
                                 name="distributor_id"
                                 label="Pelanggan / Distributor"
-                                url="/api/customers"
+                                url="/api/distributors"
                                 required="true"
                                 placeholder="Pilih Pelanggan / Distributor..."
                             />
@@ -404,6 +404,40 @@
                     this.loadDependencies(),
                     this.loadData()
                 ]);
+                const distHidden = document.getElementById('hidden-createInvDistributorPicker');
+                if (distHidden) {
+                    distHidden.addEventListener('change', (e) => {
+                        if (e.target.value) this.loadDistributorItems(e.target.value);
+                    });
+                }
+            },
+
+            async loadDistributorItems(distId) {
+                this.selectedWaybillId = null;
+                try {
+                    const res = await axios.get(`/api/finance/distributor-invoices/dependencies?distributor_id=${encodeURIComponent(distId)}`);
+                    const d = res.data?.data || res.data || {};
+                    const waybills = Array.isArray(d.waybills) ? d.waybills : [];
+                    const deliveredWaybills = waybills.filter(w =>
+                        Array.isArray(w.items) && w.items.length > 0 &&
+                        ['delivered', 'completed', 'done', 'received', 'arrived'].includes(String(w.waybill_status || '').toLowerCase())
+                    );
+                    const sourceWaybills = deliveredWaybills.length ? deliveredWaybills : waybills.filter(w => Array.isArray(w.items) && w.items.length > 0);
+
+                    if (sourceWaybills.length) {
+                        if (sourceWaybills.length === 1) {
+                            this.selectedWaybillId = sourceWaybills[0].waybill_id || null;
+                        }
+                        const tbody = document.getElementById('createInvItemsBody');
+                        tbody.innerHTML = '';
+                        sourceWaybills.forEach(w => {
+                            (w.items || []).forEach(it => this.addCreateItemRow(it));
+                        });
+                        this.recalcCreateTotals();
+                    }
+                } catch (err) {
+                    console.warn('Could not auto-load distributor waybill items:', err);
+                }
             },
 
             async loadDependencies() {
@@ -657,17 +691,24 @@
                 document.getElementById('distInvoiceCreateModal').classList.add('hidden');
             },
 
-            addCreateItemRow() {
+            addCreateItemRow(prefill = null) {
                 const tbody = document.getElementById('createInvItemsBody');
                 const tr = document.createElement('tr');
                 tr.className = 'create-inv-item-row';
 
+                const prefillPid = prefill?.corporate_product_id ? String(prefill.corporate_product_id) : '';
                 const prodOptions = '<option value="">-- Pilih dari Katalog (atau ketik manual di bawah) --</option>' +
                     this.products.map(p => {
                         const price = p.default_price || p.base_price || p.price || 0;
                         const sku = p.code || p.sku || ('SKU-' + p.id);
-                        return `<option value="${p.id}" data-name="${(p.name || '').replace(/"/g, '&quot;')}" data-sku="${sku}" data-price="${price}" data-weight="${p.weight_kg || p.weight || 0}" data-volume="${p.volume_m3 || 0}">[${sku}] ${p.name} — Rp ${Number(price).toLocaleString('id-ID')}</option>`;
+                        const selected = prefillPid && String(p.id) === prefillPid ? 'selected' : '';
+                        return `<option value="${p.id}" ${selected} data-name="${(p.name || '').replace(/"/g, '&quot;')}" data-sku="${sku}" data-price="${price}" data-weight="${p.weight_kg || p.weight || 0}" data-volume="${p.volume_m3 || 0}">[${sku}] ${p.name} — Rp ${Number(price).toLocaleString('id-ID')}</option>`;
                     }).join('');
+
+                const prefillName = (prefill?.product_name || '').replace(/"/g, '&quot;');
+                const prefillSku = (prefill?.sku || '').replace(/"/g, '&quot;');
+                const prefillQty = prefill?.qty_received || 1;
+                const prefillPrice = prefill?.unit_price ?? 0;
 
                 tr.innerHTML = `
                     <td class="py-2.5 pl-4 font-bold text-slate-500 item-row-no">1</td>
@@ -675,14 +716,14 @@
                         <select onchange="distInvoiceApp.onProductSelectChange(this)" class="item-prod-select w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-xs">
                             ${prodOptions}
                         </select>
-                        <input type="text" required placeholder="Nama produk / deskripsi tagihan..." class="item-prod-name w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-semibold" />
-                        <input type="hidden" class="item-prod-sku" value="" />
+                        <input type="text" required value="${prefillName}" placeholder="Nama produk / deskripsi tagihan..." class="item-prod-name w-full px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-semibold" />
+                        <input type="hidden" class="item-prod-sku" value="${prefillSku}" />
                     </td>
                     <td class="py-2.5 px-2 text-center align-top">
-                        <input type="number" min="1" value="1" required oninput="distInvoiceApp.recalcCreateTotals()" class="item-prod-qty w-20 px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-center font-bold text-xs" />
+                        <input type="number" min="1" value="${prefillQty}" required oninput="distInvoiceApp.recalcCreateTotals()" class="item-prod-qty w-20 px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-center font-bold text-xs" />
                     </td>
                     <td class="py-2.5 px-2 text-right align-top">
-                        <input type="number" min="0" step="100" value="0" required oninput="distInvoiceApp.recalcCreateTotals()" class="item-prod-price w-36 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-right font-mono font-bold text-xs" />
+                        <input type="number" min="0" step="100" value="${prefillPrice}" required oninput="distInvoiceApp.recalcCreateTotals()" class="item-prod-price w-36 px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-right font-mono font-bold text-xs" />
                     </td>
                     <td class="py-2.5 px-2 text-right font-mono font-bold text-slate-800 dark:text-slate-100 align-top pt-4 item-prod-subtotal">
                         Rp 0
@@ -765,7 +806,7 @@
                     const price = parseFloat(tr.querySelector('.item-prod-price')?.value || 0);
                     if (name && qty > 0) {
                         items.push({
-                            corporate_product_id: prodId ? parseInt(prodId) : 0,
+                            corporate_product_id: prodId ? parseInt(prodId) : null,
                             product_name: name,
                             sku: sku || ('SKU-ITEM-' + (items.length + 1)),
                             qty_received: qty,
@@ -781,6 +822,7 @@
 
                 const payload = {
                     distributor_id: parseInt(distId),
+                    waybill_id: this.selectedWaybillId || null,
                     invoice_date: document.getElementById('createInvDate').value,
                     due_date: document.getElementById('createInvDueDate').value,
                     status: parseInt(document.getElementById('createInvStatus').value),
@@ -798,7 +840,9 @@
                     this.closeCreateModal();
                     await this.loadData();
                 } catch (err) {
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: err.response?.data?.message || 'Gagal membuat faktur penagihan.' });
+                    const errs = err.response?.data?.errors;
+                    const detail = errs ? Object.values(errs).flat().join(', ') : (err.response?.data?.message || 'Gagal membuat faktur penagihan.');
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: detail });
                 } finally {
                     btn.disabled = false;
                 }

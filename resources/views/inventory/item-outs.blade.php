@@ -219,7 +219,7 @@
 
         async function initDependencies() {
             try {
-                const prodRes = await axios.get('/api/products?per_page=200');
+                const prodRes = await axios.get('/api/products?per_page=100');
                 cachedProducts = prodRes.data?.data?.data || prodRes.data?.data || [];
             } catch (e) {
                 console.error('Error loading products for picker:', e);
