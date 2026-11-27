@@ -11,11 +11,12 @@
 
       <!-- Quick Search Bar -->
       <div class="hidden md:flex items-center">
-        <div class="relative w-64 lg:w-72">
+        <div class="relative w-64 lg:w-72" id="corp-global-search-wrap">
           <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">
             <iconify-icon icon="solar:magnifer-linear" class="text-base"></iconify-icon>
           </div>
-          <input type="text" placeholder="{{ __('Cari SKU, Gudang, Waybill...') }}" class="form-control !ps-10 !pl-10 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full transition-all">
+          <input id="corp-global-search" type="text" autocomplete="off" placeholder="{{ __('Cari SKU, Gudang, Waybill, Faktur...') }}" class="form-control !ps-10 !pl-10 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 w-full transition-all">
+          <div id="corp-search-results" class="hidden absolute left-0 right-0 mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden text-xs max-h-72 overflow-y-auto"></div>
         </div>
       </div>
     </div>
@@ -106,3 +107,86 @@
     </div>
   </div>
 </div>
+<script>
+  (function() {
+    const input = document.getElementById('corp-global-search');
+    const box = document.getElementById('corp-search-results');
+    const wrap = document.getElementById('corp-global-search-wrap');
+    if (!input || !box) return;
+
+    @php
+      $cRole = session('user_role');
+      $cIsAdmin = ($cRole === 'corporate_admin' || !session()->has('user_role'));
+      $cCanCatalog = $cIsAdmin || in_array($cRole, ['corporate_inventory', 'corporate_operations', 'corporate_user']);
+      $cCanOps = $cIsAdmin || in_array($cRole, ['corporate_operations', 'corporate_user']);
+      $cCanInv = $cIsAdmin || in_array($cRole, ['corporate_inventory', 'corporate_user']);
+      $cCanFin = $cIsAdmin || in_array($cRole, ['corporate_finance']);
+      $cCanUsers = $cIsAdmin;
+
+      $corpRoutes = [
+        ['label' => 'Dashboard', 'kw' => 'dashboard beranda ringkasan', 'url' => '/dashboard'],
+      ];
+      if ($cCanCatalog) {
+        $corpRoutes[] = ['label' => 'Katalog SKU & Produk', 'kw' => 'sku produk barang katalog', 'url' => '/products'];
+        $corpRoutes[] = ['label' => 'Kategori Produk', 'kw' => 'kategori produk', 'url' => '/product-categories'];
+        $corpRoutes[] = ['label' => 'Hub & Gudang', 'kw' => 'hub gudang warehouse', 'url' => '/warehouses'];
+        $corpRoutes[] = ['label' => 'Pelanggan & Mitra Distribusi', 'kw' => 'pelanggan distributor customer mitra', 'url' => '/customers'];
+        $corpRoutes[] = ['label' => 'Vendor Logistik', 'kw' => 'vendor logistik kurir', 'url' => '/logistics'];
+      }
+      if ($cCanOps) {
+        $corpRoutes[] = ['label' => 'Pesanan Pelanggan (PO)', 'kw' => 'po pesanan pelanggan order', 'url' => '/customer-orders'];
+        $corpRoutes[] = ['label' => 'Request Orders (RO)', 'kw' => 'ro request order pengiriman', 'url' => '/request-orders'];
+        $corpRoutes[] = ['label' => 'Surat Jalan & Waybills', 'kw' => 'waybill surat jalan awb', 'url' => '/waybills'];
+      }
+      if ($cCanInv) {
+        $corpRoutes[] = ['label' => 'Saldo Stok Gudang', 'kw' => 'stok saldo gudang inventory', 'url' => '/inventory/stocks'];
+        $corpRoutes[] = ['label' => 'Barang Masuk (Inbound)', 'kw' => 'inbound barang masuk penerimaan', 'url' => '/inventory/item-ins'];
+        $corpRoutes[] = ['label' => 'Barang Keluar (Outbound)', 'kw' => 'outbound barang keluar', 'url' => '/inventory/item-outs'];
+      }
+      if ($cCanFin) {
+        $corpRoutes[] = ['label' => 'Faktur Penagihan Customer', 'kw' => 'faktur invoice penagihan customer distributor', 'url' => '/finance/distributor-invoices'];
+        $corpRoutes[] = ['label' => 'Tagihan Ongkir Logistik', 'kw' => 'tagihan ongkir invoice logistik', 'url' => '/finance/corporate-invoices'];
+        $corpRoutes[] = ['label' => 'Rekening Bank & VA', 'kw' => 'rekening bank va', 'url' => '/finance/bank-accounts'];
+      }
+      if ($cCanUsers) {
+        $corpRoutes[] = ['label' => 'Manajemen Pengguna', 'kw' => 'user pengguna akun', 'url' => '/users'];
+        $corpRoutes[] = ['label' => 'Integrasi & External API', 'kw' => 'integrasi api webhook', 'url' => '/integrations'];
+      }
+    @endphp
+
+    const routes = @json($corpRoutes);
+    const canCatalog = @json($cCanCatalog);
+    const canOps = @json($cCanOps);
+
+    const render = (q) => {
+      const term = (q || '').trim().toLowerCase();
+      if (!term) { box.classList.add('hidden'); return; }
+      const matches = routes.filter(r => r.label.toLowerCase().includes(term) || r.kw.includes(term)).slice(0, 6);
+      const extras = [];
+      if (canCatalog) extras.push({ label: `Cari Produk / SKU: "${q.trim()}"`, url: `/products?search=${encodeURIComponent(q.trim())}` });
+      if (canOps) extras.push({ label: `Cari Waybill: "${q.trim()}"`, url: `/waybills?search=${encodeURIComponent(q.trim())}` });
+      const all = [...matches, ...extras];
+      box.innerHTML = all.length ? all.map(item => `
+        <a href="${item.url}" class="flex items-center justify-between px-3.5 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-b last:border-b-0 border-slate-100 dark:border-slate-700">
+          <span class="font-semibold">${item.label}</span>
+          <span class="text-[10px] text-slate-400">Buka →</span>
+        </a>`).join('') : '<div class="px-3.5 py-3 text-slate-400">Tidak ada menu yang sesuai hak akses Anda.</div>';
+      box.classList.remove('hidden');
+    };
+
+    input.addEventListener('input', (e) => render(e.target.value));
+    input.addEventListener('focus', (e) => { if (e.target.value.trim()) render(e.target.value); });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const first = box.querySelector('a');
+        if (first) window.location.href = first.getAttribute('href');
+      } else if (e.key === 'Escape') {
+        box.classList.add('hidden');
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (wrap && !wrap.contains(e.target)) box.classList.add('hidden');
+    });
+  })();
+</script>
