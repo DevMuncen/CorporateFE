@@ -162,7 +162,14 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', fetchWaybills);
+        document.addEventListener('DOMContentLoaded', () => {
+            const q = new URLSearchParams(window.location.search).get('search');
+            if (q) {
+                const si = document.getElementById('wbSearch');
+                if (si) si.value = q;
+            }
+            fetchWaybills();
+        });
     </script>
     @endpush
 </x-layout.app>

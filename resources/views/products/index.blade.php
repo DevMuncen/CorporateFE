@@ -564,6 +564,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const q = new URLSearchParams(window.location.search).get('search');
+            if (q) {
+                const si = document.getElementById('searchInput');
+                if (si) si.value = q;
+            }
             fetchCategories();
             fetchProducts();
         });
